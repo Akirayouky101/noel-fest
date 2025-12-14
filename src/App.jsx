@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Menu from './pages/Menu'
-import Admin from './pages/Admin'
+import AdminKanban from './pages/AdminKanban'
 import './App.css'
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Menu />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminKanban />} />
       </Routes>
     </Router>
   )
