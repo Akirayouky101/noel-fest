@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <!-- Cielo notturno -->
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1b3d;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a2952;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f2a1a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  
+  <!-- Stelle -->
+  <circle cx="200" cy="100" r="2" fill="white" opacity="0.8"/>
+  <circle cx="400" cy="150" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="600" cy="80" r="1" fill="white" opacity="0.7"/>
+  <circle cx="800" cy="120" r="2" fill="white" opacity="0.8"/>
+  <circle cx="1000" cy="90" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="1200" cy="130" r="1" fill="white" opacity="0.9"/>
+  <circle cx="1400" cy="100" r="2" fill="white" opacity="0.7"/>
+  <circle cx="1600" cy="140" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="1800" cy="110" r="1" fill="white" opacity="0.9"/>
+  <circle cx="300" cy="200" r="1" fill="white" opacity="0.6"/>
+  <circle cx="700" cy="180" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="1100" cy="170" r="1" fill="white" opacity="0.7"/>
+  <circle cx="1500" cy="190" r="2" fill="white" opacity="0.9"/>
+  
+  <!-- Montagne lontane -->
+  <polygon points="0,600 400,400 800,600" fill="#0a2e1f" opacity="0.5"/>
+  <polygon points="600,600 1000,350 1400,600" fill="#0d3825" opacity="0.5"/>
+  <polygon points="1200,600 1600,380 1920,600" fill="#0a2e1f" opacity="0.5"/>
+  
+  <!-- Alberi in lontananza -->
+  <polygon points="100,700 150,500 200,700" fill="#0f4a2f" opacity="0.6"/>
+  <polygon points="300,720 350,530 400,720" fill="#0a3d2a" opacity="0.6"/>
+  <polygon points="500,710 550,520 600,710" fill="#14422b" opacity="0.6"/>
+  <polygon points="700,730 750,540 800,730" fill="#0f4a2f" opacity="0.6"/>
+  <polygon points="900,720 950,530 1000,720" fill="#0a3d2a" opacity="0.6"/>
+  <polygon points="1100,710 1150,520 1200,710" fill="#14422b" opacity="0.6"/>
+  <polygon points="1300,730 1350,540 1400,730" fill="#0f4a2f" opacity="0.6"/>
+  <polygon points="1500,720 1550,530 1600,720" fill="#0a3d2a" opacity="0.6"/>
+  <polygon points="1700,710 1750,520 1800,710" fill="#14422b" opacity="0.6"/>
+  
+  <!-- Alberi di mezzo -->
+  <polygon points="150,850 220,600 290,850" fill="#0d3825" opacity="0.8"/>
+  <polygon points="400,870 470,620 540,870" fill="#14422b" opacity="0.8"/>
+  <polygon points="650,860 720,610 790,860" fill="#0d3825" opacity="0.8"/>
+  <polygon points="900,880 970,630 1040,880" fill="#14422b" opacity="0.8"/>
+  <polygon points="1150,870 1220,620 1290,870" fill="#0d3825" opacity="0.8"/>
+  <polygon points="1400,860 1470,610 1540,860" fill="#14422b" opacity="0.8"/>
+  <polygon points="1650,880 1720,630 1790,880" fill="#0d3825" opacity="0.8"/>
+  
+  <!-- Alberi in primo piano -->
+  <polygon points="50,1080 150,750 250,1080" fill="#0a2e1f"/>
+  <polygon points="300,1080 400,730 500,1080" fill="#0f3823"/>
+  <polygon points="550,1080 650,740 750,1080" fill="#0a2e1f"/>
+  <polygon points="800,1080 900,720 1000,1080" fill="#0f3823"/>
+  <polygon points="1050,1080 1150,750 1250,1080" fill="#0a2e1f"/>
+  <polygon points="1300,1080 1400,730 1500,1080" fill="#0f3823"/>
+  <polygon points="1550,1080 1650,740 1750,1080" fill="#0a2e1f"/>
+  <polygon points="1800,1080 1870,760 1920,1080" fill="#0f3823"/>
+  
+  <!-- Tronchi -->
+  <rect x="145" y="950" width="10" height="130" fill="#2d1810"/>
+  <rect x="395" y="930" width="10" height="150" fill="#3d2414"/>
+  <rect x="645" y="940" width="10" height="140" fill="#2d1810"/>
+  <rect x="895" y="920" width="10" height="160" fill="#3d2414"/>
+  <rect x="1145" y="950" width="10" height="130" fill="#2d1810"/>
+  <rect x="1395" y="930" width="10" height="150" fill="#3d2414"/>
+  <rect x="1645" y="940" width="10" height="140" fill="#2d1810"/>
+  
+  <!-- Nebbia -->
+  <rect width="1920" height="300" y="780" fill="url(#fog)"/>
+  <defs>
+    <linearGradient id="fog" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#e8f4f8;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#e8f4f8;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+</svg>

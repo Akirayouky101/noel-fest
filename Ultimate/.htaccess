@@ -1,0 +1,30 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Non reindirizzare le chiamate API
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^ - [L]
+  
+  # Non reindirizzare se il file esiste
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Reindirizza tutto il resto a index.html (per React Router)
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Disabilita completamente il caching per le API
+<FilesMatch "\.(php)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+# Disabilita cache specificamente per la cartella API
+<IfModule mod_rewrite.c>
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule .* - [E=no-gzip:1,E=cache-control:no-cache]
+</IfModule>

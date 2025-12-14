@@ -1,0 +1,964 @@
+import { useState, useEffect } from 'react'
+import CharacterDisplay from '../components/CharacterDisplay'
+import MenuCategories from '../components/MenuCategories'
+import Cart from '../components/Cart'
+import { menuData } from '../data/menuData'
+import './Menu.css'
+
+function Menu() {
+  const [character, setCharacter] = useState('')
+  const [cart, setCart] = useState([])
+  const [showCart, setShowCart] = useState(false)
+  const [showIntro, setShowIntro] = useState(true)
+  const [theme, setTheme] = useState('book')
+  const [viewMode, setViewMode] = useState('game') // game mode sempre attivo
+  const [currentRoom, setCurrentRoom] = useState('entrance')
+  const [playerPosition, setPlayerPosition] = useState({ x: 0, z: 0 })
+  const [playerRotation, setPlayerRotation] = useState(0)
+  const [keys, setKeys] = useState({})
+  const [gameDialog, setGameDialog] = useState(null)
+  const [questCompleted, setQuestCompleted] = useState(false)
+
+  useEffect(() => {
+    // Recupera o genera il personaggio
+    let savedCharacter = localStorage.getItem('noelCharacter')
+    if (!savedCharacter) {
+      savedCharacter = generateCharacter()
+      localStorage.setItem('noelCharacter', savedCharacter)
+    }
+    setCharacter(savedCharacter)
+
+    // Recupera il carrello
+    const savedCart = sessionStorage.getItem('noelCart')
+    if (savedCart) {
+      setCart(JSON.parse(savedCart))
+    }
+  }, [])
+
+  const generateCharacter = () => {
+    const characters = [
+      'Agrifoglio il Saggio', 'Stella Cometa', 'Campana d\'Argento', 'Fiocco di Neve',
+      'Zampogna Festosa', 'Candela Dorata', 'Pino Sempreverde', 'Vischio Fortunato',
+      'Ghirlanda Reale', 'Babbo Natale Giovane', 'Elfo Giocoso', 'Renna Veloce',
+      'Angelo Custode', 'Presepe Vivente', 'Calza Ricolma', 'Panettone Gigante',
+      'Torrone Croccante', 'Zampone Festivo', 'Lenticchia Portafortuna', 'Cenone Regale',
+      'Brindisi di Mezzanotte', 'Fuoco del Camino', 'Neve Fresca', 'Slitta Magica',
+      'Pacco Regalo', 'Nastro Rosso', 'Carta Argentata', 'Albero Maestoso',
+      'Palla di Vetro', 'Lucina Scintillante', 'Stella Cometa Bis', 'Carbone Dolce',
+      'Befana Buona', 'Re Magio Gaspare', 'Re Magio Melchiorre', 'Re Magio Baldassarre',
+      'Pastore Devoto', 'Pecorella Smarrita', 'Bue e Asinello', 'Mangiatoia Calda',
+      'Canto di Natale', 'Campana a Festa', 'Messa di Mezzanotte', 'Tombola Natalizia',
+      'Mercatino Festoso', 'Vin Brulè Caldo', 'Castagna Arrosto', 'Cioccolata Calda',
+      'Marshmallow Dolce', 'Biscotto Speziato'
+    ]
+    
+    const used = JSON.parse(localStorage.getItem('usedCharacters') || '[]')
+    const available = characters.filter(c => !used.includes(c))
+    
+    if (available.length === 0) {
+      localStorage.setItem('usedCharacters', '[]')
+      return characters[Math.floor(Math.random() * characters.length)]
+    }
+    
+    const selected = available[Math.floor(Math.random() * available.length)]
+    used.push(selected)
+    localStorage.setItem('usedCharacters', JSON.stringify(used))
+    
+    return selected
+  }
+
+  const addToCart = (item) => {
+    const existingItem = cart.find(i => i.id === item.id)
+    let newCart
+    
+    if (existingItem) {
+      newCart = cart.map(i => 
+        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+      )
+    } else {
+      newCart = [...cart, { ...item, quantity: 1 }]
+    }
+    
+    setCart(newCart)
+    sessionStorage.setItem('noelCart', JSON.stringify(newCart))
+  }
+
+  const updateQuantity = (itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      const newCart = cart.filter(i => i.id !== itemId)
+      setCart(newCart)
+      sessionStorage.setItem('noelCart', JSON.stringify(newCart))
+    } else {
+      const newCart = cart.map(i => 
+        i.id === itemId ? { ...i, quantity: newQuantity } : i
+      )
+      setCart(newCart)
+      sessionStorage.setItem('noelCart', JSON.stringify(newCart))
+    }
+  }
+
+  const submitOrder = async (notes) => {
+    try {
+      // Chiamata API PHP
+      const response = await fetch('/api/orders.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          character,
+          items: cart,
+          notes,
+          timestamp: new Date().toISOString()
+        })
+      })
+
+      if (response.ok) {
+        // Ordine inviato con successo
+        sessionStorage.removeItem('noelCart')
+        setCart([])
+        setShowCart(false)
+        alert('✅ Ordine inviato con successo!')
+      }
+    } catch (error) {
+      console.error('Errore invio ordine:', error)
+      alert('❌ Errore nell\'invio dell\'ordine')
+    }
+  }
+
+  // Gestione drag panorama 360
+  const handlePanoramaMouseDown = (e) => {
+    setIsDragging(true)
+    setStartX(e.clientX)
+  }
+
+  const handlePanoramaMouseMove = (e) => {
+    if (!isDragging) return
+    const deltaX = e.clientX - startX
+    setPanoramaAngle(prev => prev + deltaX * 0.5)
+    setStartX(e.clientX)
+  }
+
+  const handlePanoramaMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handlePanoramaTouchStart = (e) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].clientX)
+  }
+
+  const handlePanoramaTouchMove = (e) => {
+    if (!isDragging) return
+    const deltaX = e.touches[0].clientX - startX
+    setPanoramaAngle(prev => prev + deltaX * 0.5)
+    setStartX(e.touches[0].clientX)
+  }
+
+  const handlePanoramaTouchEnd = () => {
+    setIsDragging(false)
+  }
+
+  // GAME LOGIC - Navigazione RPG
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      setKeys(prev => ({ ...prev, [e.key.toLowerCase()]: true }))
+      
+      // Chiudi dialog con ESC
+      if (e.key === 'Escape' && gameDialog) {
+        setGameDialog(null)
+      }
+    }
+    
+    const handleKeyUp = (e) => {
+      setKeys(prev => ({ ...prev, [e.key.toLowerCase()]: false }))
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [gameDialog])
+
+  // Movimento player
+  useEffect(() => {
+    if (viewMode !== 'game' || gameDialog) return
+
+    const moveSpeed = 0.2
+
+    const gameLoop = setInterval(() => {
+      setPlayerPosition(prev => {
+        let newX = prev.x
+        let newZ = prev.z
+        let moved = false
+
+        if (keys['w'] || keys['arrowup']) {
+          newZ -= moveSpeed
+          moved = true
+        }
+        if (keys['s'] || keys['arrowdown']) {
+          newZ += moveSpeed
+          moved = true
+        }
+        if (keys['a'] || keys['arrowleft']) {
+          newX -= moveSpeed
+          moved = true
+        }
+        if (keys['d'] || keys['arrowright']) {
+          newX += moveSpeed
+          moved = true
+        }
+
+        // Limiti mappa
+        newX = Math.max(-18, Math.min(18, newX))
+        newZ = Math.max(-12, Math.min(12, newZ))
+
+        // Aggiorna rotazione se si è mosso
+        if (moved) {
+          const angle = Math.atan2(newX - prev.x, prev.z - newZ)
+          setPlayerRotation(angle)
+        }
+
+        return { x: newX, z: newZ }
+      })
+    }, 16)
+
+    return () => clearInterval(gameLoop)
+  }, [keys, viewMode, gameDialog])
+
+  // NPCs e Interazioni
+  const npcs = [
+    { id: 'king', name: 'Re Agrifoglio', icon: '👑', x: 0, z: -8, 
+      dialog: 'Benvenuto nel mio castello, nobile ' + character + '! Il grande banchetto di Natale sta per iniziare. Visita le diverse sale per scoprire le delizie preparate dai miei chef!' },
+    { id: 'chef', name: 'Chef Stellato', icon: '👨‍🍳', x: -12, z: -8,
+      dialog: 'Benvenuto nella cucina reale! Abbiamo preparato piatti straordinari per te. Vai nelle sale tematiche per scoprire i nostri menù!' },
+    { id: 'elfo', name: 'Elfo Giocoso', icon: '🧝', x: 12, z: -8,
+      dialog: 'Ho nascosto una ricetta segreta da qualche parte nel castello... Forse nel Giardino Reale? 🤫' },
+    { id: 'fata', name: 'Fata delle Stelle', icon: '🧚', x: -12, z: 8,
+      dialog: 'Che meraviglia! Ogni piatto in questo castello è preparato con amore e magia natalizia! ✨' },
+    { id: 'renna', name: 'Renna Veloce', icon: '🦌', x: 12, z: 8,
+      dialog: 'Ho viaggiato per tutto il regno per portare gli ingredienti più freschi! Assaggia tutto!' }
+  ]
+
+  // Controllo collisioni con NPCs
+  const checkNPCCollision = () => {
+    for (let npc of npcs) {
+      const distance = Math.sqrt(
+        Math.pow(playerPosition.x - npc.x, 2) + 
+        Math.pow(playerPosition.z - npc.z, 2)
+      )
+      if (distance < 2) {
+        return npc
+      }
+    }
+    return null
+  }
+
+  // Controllo collisioni con stanze
+  const rooms = [
+    { id: 'antipasti', name: 'Sala degli Antipasti', icon: '🥗', x: -10, z: -3 },
+    { id: 'primi', name: 'Sala dei Primi', icon: '🍝', x: -5, z: -3 },
+    { id: 'secondi', name: 'Sala dei Secondi', icon: '🍖', x: 0, z: -3 },
+    { id: 'contorni', name: 'Giardino Reale', icon: '🥬', x: 5, z: -3 },
+    { id: 'dolci', name: 'Pasticceria Reale', icon: '🍰', x: 10, z: -3 },
+    { id: 'bevande', name: 'Cantina Reale', icon: '🍷', x: 0, z: 3 }
+  ]
+
+  const checkRoomCollision = () => {
+    for (let room of rooms) {
+      const distance = Math.sqrt(
+        Math.pow(playerPosition.x - room.x, 2) + 
+        Math.pow(playerPosition.z - room.z, 2)
+      )
+      if (distance < 2.5) {
+        return room
+      }
+    }
+    return null
+  }
+
+  const nearNPC = checkNPCCollision()
+  const nearRoom = checkRoomCollision()
+
+  return (
+    <div className="menu-page game-mode">
+      {showIntro && (
+        <div className="intro-overlay" onClick={() => setShowIntro(false)}>
+          <div className="intro-content intro-game">
+            <div className="game-intro">
+              <h1 className="game-title">🏰 Il Castello di Re Agrifoglio 🏰</h1>
+              <div className="game-story">
+                <p>
+                  Nel Regno del Natale, dove la neve cade dolcemente sui tetti delle case
+                  e le stelle brillano come diamanti nel cielo, sorge il magnifico castello
+                  di <strong>Re Agrifoglio</strong>.
+                </p>
+                <p>
+                  Ogni anno, durante la vigilia di Natale, Re Agrifoglio apre le porte del
+                  suo castello per il <strong>Grande Banchetto Reale</strong>, dove ospiti
+                  da tutto il regno possono gustare le più prelibate delizie natalizie.
+                </p>
+                <p>
+                  Oggi, <strong className="character-highlight">{character}</strong>, sei
+                  tu l'ospite d'onore! Esplora il castello, parla con i personaggi magici,
+                  e scopri i tesori culinari nascosti nelle sale reali!
+                </p>
+              </div>
+              <button className="start-game-btn" onClick={() => setShowIntro(false)}>
+                ⚔️ Inizia l'Avventura
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GAME VIEW */}
+      <div className="rpg-game-container">
+        {/* HUD */}
+        <div className="game-hud">
+          <div className="hud-left">
+            <div className="player-info">
+              <span className="player-icon">🧙‍♂️</span>
+              <span className="player-name">{character}</span>
+            </div>
+            <div className="cart-info" onClick={() => setShowCart(true)}>
+              🛒 {cart.reduce((sum, item) => sum + item.quantity, 0)} items
+            </div>
+          </div>
+          <div className="hud-right">
+            <div className="controls-hint">⌨️ WASD o Frecce per muoverti</div>
+          </div>
+        </div>
+
+        {/* Mappa di gioco */}
+        <div className="game-map">
+          {/* Sfondo castello */}
+          <div className="map-background"></div>
+
+          {/* NPCs */}
+          {npcs.map(npc => (
+            <div
+              key={npc.id}
+              className={`npc ${nearNPC?.id === npc.id ? 'near' : ''}`}
+              style={{
+                left: `${50 + npc.x * 2.5}%`,
+                top: `${50 - npc.z * 3}%`
+              }}
+              onClick={() => setGameDialog(npc)}
+            >
+              <div className="npc-icon">{npc.icon}</div>
+              <div className="npc-name">{npc.name}</div>
+              {nearNPC?.id === npc.id && (
+                <div className="interact-prompt">💬 Premi E o Click</div>
+              )}
+            </div>
+          ))}
+
+          {/* Stanze/Porte */}
+          {rooms.map(room => (
+            <div
+              key={room.id}
+              className={`game-room ${nearRoom?.id === room.id ? 'near' : ''}`}
+              style={{
+                left: `${50 + room.x * 2.5}%`,
+                top: `${50 - room.z * 3}%`
+              }}
+              onClick={() => nearRoom?.id === room.id && setCurrentRoom(room.id)}
+            >
+              <div className="room-icon-game">{room.icon}</div>
+              <div className="room-name-game">{room.name}</div>
+              {nearRoom?.id === room.id && (
+                <div className="interact-prompt">🚪 Premi E o Click</div>
+              )}
+            </div>
+          ))}
+
+          {/* Player */}
+          <div
+            className="game-player"
+            style={{
+              left: `${50 + playerPosition.x * 2.5}%`,
+              top: `${50 - playerPosition.z * 3}%`,
+              transform: `translate(-50%, -50%) rotate(${playerRotation * 57.3}deg)`
+            }}
+          >
+            <div className="player-sprite">🧙‍♂️</div>
+            <div className="player-shadow"></div>
+          </div>
+
+          {/* Decorazioni ambiente */}
+          <div className="ambient-decoration tree1" style={{ left: '15%', top: '20%' }}>🎄</div>
+          <div className="ambient-decoration tree2" style={{ left: '85%', top: '20%' }}>🎄</div>
+          <div className="ambient-decoration candle1" style={{ left: '25%', top: '15%' }}>🕯️</div>
+          <div className="ambient-decoration candle2" style={{ left: '75%', top: '15%' }}>🕯️</div>
+          <div className="ambient-decoration star1" style={{ left: '50%', top: '10%' }}>⭐</div>
+        </div>
+
+        {/* Dialog NPC */}
+        {gameDialog && (
+          <div className="game-dialog-overlay" onClick={() => setGameDialog(null)}>
+            <div className="game-dialog" onClick={(e) => e.stopPropagation()}>
+              <div className="dialog-header">
+                <span className="dialog-npc-icon">{gameDialog.icon}</span>
+                <span className="dialog-npc-name">{gameDialog.name}</span>
+                <button className="dialog-close" onClick={() => setGameDialog(null)}>✕</button>
+              </div>
+              <div className="dialog-content">
+                <p>{gameDialog.dialog}</p>
+              </div>
+              <button className="dialog-ok" onClick={() => setGameDialog(null)}>
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Menu stanza */}
+        {currentRoom !== 'entrance' && (
+          <div className="room-menu-overlay">
+            <div className="room-menu-panel">
+              <button 
+                className="close-room-btn" 
+                onClick={() => setCurrentRoom('entrance')}
+              >
+                ✕ Chiudi
+              </button>
+              <h2 className="room-menu-title">
+                {rooms.find(r => r.id === currentRoom)?.icon} {rooms.find(r => r.id === currentRoom)?.name}
+              </h2>
+              <div className="room-menu-grid">
+                {menuData[currentRoom]?.map((item) => (
+                  <div key={item.id} className="menu-item-card">
+                    <h4>{item.name}</h4>
+                    <p className="item-desc">{item.description}</p>
+                    <div className="item-footer">
+                      <span className="item-price">€{item.price.toFixed(2)}</span>
+                      <button 
+                        className="add-to-cart-btn"
+                        onClick={() => addToCart(item)}
+                      >
+                        ➕ Aggiungi
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {showIntro && (
+        <div className="intro-overlay" onClick={() => setShowIntro(false)}>
+          <div className={`intro-content intro-${theme}`}>
+            {theme === 'book' && (
+              <div className="book-intro">
+                <div className="book-pages">
+                  <div className="book-left">
+                    <h1>C'era una volta...</h1>
+                    <p className="story-text">
+                      Nel Regno del Natale, dove la neve brilla come diamanti 
+                      e le stelle danzano nel cielo, regnava il saggio Re Agrifoglio.
+                    </p>
+                  </div>
+                  <div className="book-right">
+                    <h2>Il Banchetto Reale</h2>
+                    <p className="story-text">
+                      Ogni anno, Re Agrifoglio invita tutti nel suo castello 
+                      per il grande banchetto natalizio. Oggi sei tu l'ospite d'onore!
+                    </p>
+                    <button className="enter-button" onClick={() => setShowIntro(false)}>
+                      📖 Entra nel Castello
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {theme === 'snow' && (
+              <div className="snow-intro">
+                <div className="snowflakes">
+                  {[...Array(50)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="snowflake"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 5}s`,
+                        animationDuration: `${8 + Math.random() * 10}s`
+                      }}
+                    >
+                      ❄
+                    </div>
+                  ))}
+                </div>
+                <div className="snow-content">
+                  <h1 className="magical-title">❄️ Regno di Re Agrifoglio ❄️</h1>
+                  <p className="snow-subtitle">La neve magica ti accompagna al banchetto</p>
+                  <button className="enter-button" onClick={() => setShowIntro(false)}>
+                    ❄️ Attraversa la Neve
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {theme === 'castle' && (
+              <div className="castle-intro">
+                <div className="castle-gates">
+                  <div className="gate gate-left"></div>
+                  <div className="gate gate-right"></div>
+                  <div className="castle-content">
+                    <h1>🏰 Castello di Re Agrifoglio 🏰</h1>
+                    <p>Le porte del castello si aprono per te</p>
+                    <button className="enter-button" onClick={() => setShowIntro(false)}>
+                      🚪 Entra nel Castello
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showCart && (
+        <Cart 
+          cart={cart}
+          character={character}
+          onClose={() => setShowCart(false)}
+          onUpdateQuantity={updateQuantity}
+          onSubmit={submitOrder}
+        />
+      )}
+    </div>
+  )
+}
+
+export default Menu
+        <div className="mode-group">
+          <span className="mode-label">Intro:</span>
+          <button onClick={() => { setTheme('book'); setShowIntro(true); }} className={theme === 'book' ? 'active' : ''}>📖</button>
+          <button onClick={() => { setTheme('snow'); setShowIntro(true); }} className={theme === 'snow' ? 'active' : ''}>❄️</button>
+          <button onClick={() => { setTheme('castle'); setShowIntro(true); }} className={theme === 'castle' ? 'active' : ''}>🏰</button>
+        </div>
+        <div className="mode-group">
+          <span className="mode-label">Vista:</span>
+          <button onClick={() => setViewMode('facade')} className={viewMode === 'facade' ? 'active' : ''}>🏰 Facciata</button>
+          <button onClick={() => setViewMode('tour3d')} className={viewMode === 'tour3d' ? 'active' : ''}>🚪 Tour 3D</button>
+          <button onClick={() => { setViewMode('panorama'); setCurrentRoom('entrance'); setPanoramaAngle(0); }} className={viewMode === 'panorama' ? 'active' : ''}>🎥 360°</button>
+          <button onClick={() => { setViewMode('threejs'); setCurrentRoom('entrance'); }} className={viewMode === 'threejs' ? 'active' : ''}>🎮 3D Full</button>
+        </div>
+      </div>
+
+      <header className="menu-header">
+        <h1>🎄 Re Agrifoglio 🎄</h1>
+        <p className="subtitle">Menù Magico di Natale</p>
+      </header>
+
+      {viewMode === 'facade' ? (
+        <>
+          <CharacterDisplay character={character} />
+          <MenuCategories onAddToCart={addToCart} />
+        </>
+      ) : viewMode === 'tour3d' ? (
+        <div className="castle-tour-3d">
+          {currentRoom === 'entrance' ? (
+            <div className="room entrance-hall">
+              <h2>🏰 Ingresso del Castello</h2>
+              <p>Benvenuto nel Castello di Re Agrifoglio!</p>
+              <div className="character-info">
+                <p>Il tuo personaggio:</p>
+                <h3>{character}</h3>
+              </div>
+              <div className="doors-grid">
+                <div className="door-card" onClick={() => setCurrentRoom('antipasti')}>
+                  <div className="door">🚪</div>
+                  <h4>🌟 Sala degli Antipasti</h4>
+                </div>
+                <div className="door-card" onClick={() => setCurrentRoom('primi')}>
+                  <div className="door">🚪</div>
+                  <h4>🍝 Sala dei Primi</h4>
+                </div>
+                <div className="door-card" onClick={() => setCurrentRoom('secondi')}>
+                  <div className="door">🚪</div>
+                  <h4>🍖 Sala dei Secondi</h4>
+                </div>
+                <div className="door-card" onClick={() => setCurrentRoom('contorni')}>
+                  <div className="door">🚪</div>
+                  <h4>🥗 Giardino Reale</h4>
+                </div>
+                <div className="door-card" onClick={() => setCurrentRoom('dolci')}>
+                  <div className="door">🚪</div>
+                  <h4>🍰 Pasticceria</h4>
+                </div>
+                <div className="door-card" onClick={() => setCurrentRoom('bevande')}>
+                  <div className="door">🚪</div>
+                  <h4>🍷 Cantina</h4>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={`room ${currentRoom}-room`}>
+              <button className="back-button" onClick={() => setCurrentRoom('entrance')}>
+                ⬅️ Torna all'Ingresso
+              </button>
+              <h2>
+                {currentRoom === 'antipasti' && '🌟 Sala degli Antipasti'}
+                {currentRoom === 'primi' && '🍝 Sala dei Primi Piatti'}
+                {currentRoom === 'secondi' && '🍖 Sala dei Secondi'}
+                {currentRoom === 'contorni' && '🥗 Giardino Reale'}
+                {currentRoom === 'dolci' && '🍰 Pasticceria Reale'}
+                {currentRoom === 'bevande' && '🍷 Cantina Reale'}
+              </h2>
+              <div className="room-menu">
+                {menuData[currentRoom]?.map((item, index) => (
+                  <div key={item.id} className="room-menu-item" style={{animationDelay: `${index * 0.1}s`}}>
+                    <div className="item-header">
+                      <h4>{item.name}</h4>
+                      <span className="price">€{item.price.toFixed(2)}</span>
+                    </div>
+                    <p className="description">{item.description}</p>
+                    <button className="add-btn" onClick={() => addToCart(item)}>
+                      ➕ Aggiungi al Carrello
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : viewMode === 'panorama' ? (
+        <div 
+          className="panorama-360"
+          onMouseDown={handlePanoramaMouseDown}
+          onMouseMove={handlePanoramaMouseMove}
+          onMouseUp={handlePanoramaMouseUp}
+          onMouseLeave={handlePanoramaMouseUp}
+          onTouchStart={handlePanoramaTouchStart}
+          onTouchMove={handlePanoramaTouchMove}
+          onTouchEnd={handlePanoramaTouchEnd}
+        >
+          {currentRoom === 'entrance' ? (
+            <div className="panorama-room" style={{ transform: `rotateY(${panoramaAngle}deg)` }}>
+              <div className="panorama-hint">
+                👆 Trascina per guardare intorno • Clicca sulle porte per entrare
+              </div>
+
+              <div className="panorama-walls">
+                {/* Parete Nord - Fronte */}
+                <div className="panorama-wall north">
+                  <div className="wall-decoration">🏰 Ingresso del Castello 🏰</div>
+                  <div className="panorama-doors-row">
+                    <div className="panorama-door" onClick={() => setCurrentRoom('antipasti')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🥗</div>
+                        <div className="door-label">Antipasti</div>
+                      </div>
+                    </div>
+                    <div className="panorama-door" onClick={() => setCurrentRoom('primi')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🍝</div>
+                        <div className="door-label">Primi</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parete Est - Destra */}
+                <div className="panorama-wall east">
+                  <div className="wall-decoration">🕯️ ✨ Torce Magiche ✨ 🕯️</div>
+                  <div className="panorama-doors-row">
+                    <div className="panorama-door" onClick={() => setCurrentRoom('secondi')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🍖</div>
+                        <div className="door-label">Secondi</div>
+                      </div>
+                    </div>
+                    <div className="panorama-door" onClick={() => setCurrentRoom('contorni')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🥬</div>
+                        <div className="door-label">Contorni</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parete Sud - Retro */}
+                <div className="panorama-wall south">
+                  <div className="wall-decoration">🎄 Re Agrifoglio 🎄</div>
+                  <div className="panorama-doors-row">
+                    <div className="panorama-door" onClick={() => setCurrentRoom('dolci')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🍰</div>
+                        <div className="door-label">Dolci</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parete Ovest - Sinistra */}
+                <div className="panorama-wall west">
+                  <div className="wall-decoration">🔥 Camino Reale 🔥</div>
+                  <div className="panorama-doors-row">
+                    <div className="panorama-door" onClick={() => setCurrentRoom('bevande')}>
+                      <div className="door-frame">
+                        <div className="door-icon">🍷</div>
+                        <div className="door-label">Bevande</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Soffitto */}
+                <div className="panorama-wall ceiling">
+                  <div className="chandelier">💎 🕯️ 💎 🕯️ 💎 🕯️ 💎</div>
+                </div>
+
+                {/* Pavimento */}
+                <div className="panorama-wall floor">
+                  <div className="floor-pattern">◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="panorama-room-view" style={{ transform: `rotateY(${panoramaAngle}deg)` }}>
+              <button className="back-button-panorama" onClick={() => setCurrentRoom('entrance')}>
+                ⬅️ Torna all'Ingresso
+              </button>
+              
+              <div className="panorama-hint">
+                👆 Trascina per guardare intorno • Clicca per aggiungere al carrello
+              </div>
+
+              <div className="panorama-walls">
+                {/* Distribuisci gli items sulle 4 pareti */}
+                {['north', 'east', 'south', 'west'].map((wall, wallIndex) => {
+                  const items = menuData[currentRoom] || []
+                  const itemsPerWall = Math.ceil(items.length / 4)
+                  const wallItems = items.slice(wallIndex * itemsPerWall, (wallIndex + 1) * itemsPerWall)
+                  
+                  return (
+                    <div key={wall} className={`panorama-wall ${wall}`}>
+                      <div className="wall-decoration">
+                        {wall === 'north' && `🎭 ${currentRoom.toUpperCase()} 🎭`}
+                        {wall === 'east' && '🕯️ ✨ 🕯️'}
+                        {wall === 'south' && '🏰 ⚜️ 🏰'}
+                        {wall === 'west' && '🔥 💎 🔥'}
+                      </div>
+                      <div className="wall-items">
+                        {wallItems.map((item) => (
+                          <div key={item.id} className="panorama-menu-item">
+                            <h4>{item.name}</h4>
+                            <p className="description">{item.description}</p>
+                            <div className="item-footer">
+                              <span className="price">€{item.price.toFixed(2)}</span>
+                              <button 
+                                className="add-btn"
+                                onClick={() => addToCart(item)}
+                              >
+                                ➕
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Soffitto */}
+                <div className="panorama-wall ceiling">
+                  <div className="chandelier">🕯️ 💎 🕯️ 💎 🕯️ 💎 🕯️</div>
+                </div>
+
+                {/* Pavimento */}
+                <div className="panorama-wall floor">
+                  <div className="floor-pattern">
+                    ◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆ ◇ ◆
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : viewMode === 'threejs' ? (
+        <div className="castle-3d-simple">
+          {currentRoom === 'entrance' ? (
+            <div className="top-down-view">
+              {/* HUD */}
+              <div className="hud-overlay">
+                <div className="hud-title">🏰 Castello di Re Agrifoglio</div>
+                <div className="hud-character">👤 {character}</div>
+                <div className="hud-controls">
+                  <div>⌨️ W A S D o Frecce = Muoviti</div>
+                  <div>🚪 Avvicinati a una porta per entrare</div>
+                </div>
+              </div>
+
+              {/* Prompt porta vicina */}
+              {nearDoor && (
+                <div className="door-prompt">
+                  <div className="prompt-text">
+                    🚪 Porta raggiunta!
+                  </div>
+                  <button 
+                    className="prompt-button"
+                    onClick={() => setCurrentRoom(nearDoor)}
+                  >
+                    Entra nella stanza
+                  </button>
+                </div>
+              )}
+
+              {/* Mappa vista dall'alto */}
+              <div className="castle-map">
+                {/* Pareti esterne */}
+                <div className="castle-walls">
+                  <div className="wall-segment top"></div>
+                  <div className="wall-segment bottom"></div>
+                  <div className="wall-segment left"></div>
+                  <div className="wall-segment right"></div>
+                </div>
+
+                {/* Decorazioni sala */}
+                <div className="hall-decoration" style={{ top: '10%', left: '50%' }}>💎</div>
+                <div className="hall-decoration" style={{ top: '20%', left: '20%' }}>🕯️</div>
+                <div className="hall-decoration" style={{ top: '20%', right: '20%' }}>🕯️</div>
+                <div className="hall-decoration" style={{ bottom: '10%', left: '30%' }}>✨</div>
+                <div className="hall-decoration" style={{ bottom: '10%', right: '30%' }}>✨</div>
+
+                {/* Porte come stanze */}
+                <div 
+                  className={`room-door antipasti ${nearDoor === 'antipasti' ? 'near' : ''}`}
+                  style={{ top: '15%', left: '10%' }}
+                  onClick={() => setCurrentRoom('antipasti')}
+                >
+                  <div className="room-icon">🥗</div>
+                  <div className="room-name">Antipasti</div>
+                </div>
+                
+                <div 
+                  className={`room-door primi ${nearDoor === 'primi' ? 'near' : ''}`}
+                  style={{ top: '15%', left: '40%' }}
+                  onClick={() => setCurrentRoom('primi')}
+                >
+                  <div className="room-icon">🍝</div>
+                  <div className="room-name">Primi</div>
+                </div>
+                
+                <div 
+                  className={`room-door secondi ${nearDoor === 'secondi' ? 'near' : ''}`}
+                  style={{ top: '15%', right: '10%' }}
+                  onClick={() => setCurrentRoom('secondi')}
+                >
+                  <div className="room-icon">🍖</div>
+                  <div className="room-name">Secondi</div>
+                </div>
+                
+                <div 
+                  className={`room-door contorni ${nearDoor === 'contorni' ? 'near' : ''}`}
+                  style={{ bottom: '15%', left: '10%' }}
+                  onClick={() => setCurrentRoom('contorni')}
+                >
+                  <div className="room-icon">🥬</div>
+                  <div className="room-name">Contorni</div>
+                </div>
+                
+                <div 
+                  className={`room-door dolci ${nearDoor === 'dolci' ? 'near' : ''}`}
+                  style={{ bottom: '15%', left: '40%' }}
+                  onClick={() => setCurrentRoom('dolci')}
+                >
+                  <div className="room-icon">🍰</div>
+                  <div className="room-name">Dolci</div>
+                </div>
+                
+                <div 
+                  className={`room-door bevande ${nearDoor === 'bevande' ? 'near' : ''}`}
+                  style={{ bottom: '15%', right: '10%' }}
+                  onClick={() => setCurrentRoom('bevande')}
+                >
+                  <div className="room-icon">🍷</div>
+                  <div className="room-name">Bevande</div>
+                </div>
+
+                {/* Player */}
+                <div 
+                  className="player-avatar"
+                  style={{
+                    left: `${50 + playerPosition.x * 2}%`,
+                    top: `${50 - playerPosition.z * 2}%`,
+                    transform: `translate(-50%, -50%) rotate(${playerRotation * 57.3 + 180}deg)`
+                  }}
+                >
+                  🧙‍♂️
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="room-interior">
+                <button className="back-btn-3d" onClick={() => { 
+                  setCurrentRoom('entrance'); 
+                  setPlayerPosition({ x: 0, z: 10 }); 
+                  setPlayerRotation(0);
+                }}>
+                  ⬅️ Torna all'Ingresso
+                </button>
+                
+                <h2 className="room-title">
+                  {currentRoom === 'antipasti' && '🥗 Sala degli Antipasti'}
+                  {currentRoom === 'primi' && '🍝 Sala dei Primi'}
+                  {currentRoom === 'secondi' && '🍖 Sala dei Secondi'}
+                  {currentRoom === 'contorni' && '🥬 Giardino Reale'}
+                  {currentRoom === 'dolci' && '🍰 Pasticceria Reale'}
+                  {currentRoom === 'bevande' && '🍷 Cantina Reale'}
+                </h2>
+                
+                <div className="menu-cards-3d">
+                  {menuData[currentRoom]?.map((item, index) => (
+                    <div key={item.id} className="menu-card-3d" style={{animationDelay: `${index * 0.1}s`}}>
+                      <div className="card-inner">
+                        <h4>{item.name}</h4>
+                        <p className="card-desc">{item.description}</p>
+                        <div className="card-footer">
+                          <span className="card-price">€{item.price.toFixed(2)}</span>
+                          <button className="card-add-btn" onClick={() => addToCart(item)}>
+                            ➕ Aggiungi
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+        </div>
+      ) : (
+        <div className="coming-soon">
+          <h2>🚧 Modalità in arrivo! 🚧</h2>
+          <p>Questa modalità sarà disponibile presto</p>
+        </div>
+      )}
+
+      <button 
+        className="cart-button-fixed"
+        onClick={() => setShowCart(true)}
+      >
+        🛒 Carrello ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+      </button>
+
+      {showCart && (
+        <Cart 
+          cart={cart}
+          character={character}
+          onClose={() => setShowCart(false)}
+          onUpdateQuantity={updateQuantity}
+          onSubmit={submitOrder}
+        />
+      )}
+    </div>
+  )
+}
+
+export default Menu

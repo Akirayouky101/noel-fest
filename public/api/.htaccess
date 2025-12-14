@@ -1,0 +1,22 @@
+# Disabilita completamente il caching per tutti i file in questa cartella
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0, private"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+  Header unset ETag
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive Off
+</IfModule>
+
+# Disabilita compressione per evitare problemi con il cache
+<IfModule mod_deflate.c>
+  SetEnv no-gzip 1
+</IfModule>
+
+# Header aggiuntivi per SiteGround
+<IfModule mod_headers.c>
+  Header set X-Cache-Control "no-cache"
+  Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+</IfModule>

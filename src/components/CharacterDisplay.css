@@ -1,0 +1,68 @@
+.character-display {
+  background: linear-gradient(135deg, #f4e4c1 0%, #fef5e7 100%);
+  margin: 30px auto;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  text-align: center;
+  border: 4px solid #8b4513;
+  position: relative;
+  z-index: 2;
+}
+
+/* Decorazioni castello */
+.character-display::before {
+  content: '🏰';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 40px;
+  background: linear-gradient(135deg, #f4e4c1 0%, #fef5e7 100%);
+  padding: 0 20px;
+  border-radius: 50%;
+  border: 3px solid #8b4513;
+}
+
+.character-display p {
+  color: #5d4037;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.character-name {
+  font-size: 2rem;
+  color: #4a148c;
+  margin: 15px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 0px #ffd700,
+               -1px -1px 0px #ffd700,
+               1px -1px 0px #ffd700,
+               -1px 1px 0px #ffd700;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.character-hint {
+  color: #8b4513;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .character-display {
+    margin: 20px;
+    padding: 20px;
+  }
+  
+  .character-name {
+    font-size: 1.5rem;
+  }
+}

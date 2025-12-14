@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Noel Fest</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a4d2e, #8B0000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #8B0000;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #1a4d2e;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .qr-container {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 3px solid #FFD700;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        .url-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #ccc;
+        }
+        .url {
+            font-family: monospace;
+            color: #333;
+            word-break: break-all;
+            font-size: 1.1rem;
+        }
+        .instructions {
+            text-align: left;
+            color: #333;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 10px;
+            border-left: 5px solid #ffc107;
+        }
+        .instructions h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .instructions ol {
+            margin: 10px 0;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #8B0000;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+        }
+        .note {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #155724;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎄 Noel Fest - QR Code Unico</h1>
+        <p class="subtitle">Il Bosco Incantato di Re Agrifoglio</p>
+        
+        <div class="qr-container">
+            <img id="qrcode" src="" alt="QR Code Noel Fest">
+        </div>
+        
+        <div class="url-box">
+            <div class="url" id="url">https://noelfest.appdataconnect.it</div>
+        </div>
+        
+        <button class="download-btn" onclick="downloadQR()">📥 Scarica QR Code</button>
+        <button class="download-btn" onclick="printQR()">🖨️ Stampa QR Code</button>
+        
+        <div class="note">
+            ⚠️ IMPORTANTE: Questo è l'UNICO QR code necessario per tutto l'evento!<br>
+            Non servono QR separati per tavoli.
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Istruzioni</h3>
+            <ol>
+                <li><strong>Scarica</strong> l'immagine del QR code usando il pulsante sopra</li>
+                <li><strong>Stampa</strong> il QR code in formato grande (minimo A4)</li>
+                <li><strong>Posiziona</strong> il QR in punti visibili dell'evento:
+                    <ul>
+                        <li>All'ingresso</li>
+                        <li>Vicino alla cassa</li>
+                        <li>In zone di attesa</li>
+                    </ul>
+                </li>
+                <li><strong>Istruisci</strong> il personale: ogni utente scansiona questo QR e riceve un personaggio casuale</li>
+            </ol>
+        </div>
+        
+        <div class="instructions" style="background: #d1ecf1; border-left-color: #0c5460;">
+            <h3 style="color: #0c5460;">🎭 Come Funziona</h3>
+            <p style="color: #0c5460;">
+                1. Utente scansiona QR<br>
+                2. Sistema assegna nome personaggio casuale (es. "Re Agrifoglio")<br>
+                3. Utente sceglie: Ordina Subito o Prenota Posto<br>
+                4. Utente fa SCREENSHOT del nome personaggio<br>
+                5. Mostra screenshot in cassa per ritiro ordine
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // URL del sito
+        const siteURL = 'https://noelfest.appdataconnect.it';
+        
+        // Genera QR usando API esterna
+        function generateQR() {
+            const size = 400;
+            const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(siteURL)}&margin=20`;
+            document.getElementById('qrcode').src = qrURL;
+            document.getElementById('url').textContent = siteURL;
+        }
+        
+        // Download QR
+        function downloadQR() {
+            const img = document.getElementById('qrcode');
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'NoelFest_QRCode.png';
+            link.click();
+        }
+        
+        // Stampa QR
+        function printQR() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Stampa QR Code Noel Fest</title>
+                    <style>
+                        body {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            min-height: 100vh;
+                            margin: 0;
+                            font-family: Arial, sans-serif;
+                        }
+                        h1 {
+                            color: #8B0000;
+                            margin-bottom: 10px;
+                        }
+                        .subtitle {
+                            color: #1a4d2e;
+                            font-size: 1.5rem;
+                            margin-bottom: 30px;
+                            font-style: italic;
+                        }
+                        img {
+                            max-width: 600px;
+                            height: auto;
+                        }
+                        .url {
+                            font-size: 1.3rem;
+                            margin-top: 20px;
+                            color: #333;
+                        }
+                        .note {
+                            margin-top: 30px;
+                            padding: 20px;
+                            background: #fff3cd;
+                            border-radius: 10px;
+                            max-width: 600px;
+                            text-align: center;
+                        }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>🎄 Noel Fest</h1>
+                    <p class="subtitle">Il Bosco Incantato di Re Agrifoglio</p>
+                    <img src="${document.getElementById('qrcode').src}" alt="QR Code">
+                    <p class="url">${siteURL}</p>
+                    <div class="note">
+                        <strong>Scansiona per ordinare e prenotare il tuo posto!</strong>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        
+        // Genera QR al caricamento
+        generateQR();
+    </script>
+</body>
+</html>

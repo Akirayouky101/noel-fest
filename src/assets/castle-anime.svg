@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <!-- Cielo magico con gradiente -->
+  <defs>
+    <linearGradient id="magicSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a0f3e;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#2d1b5e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4a2d7c;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="moonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff8dc;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#fffacd;stop-opacity:0.6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sfondo cielo -->
+  <rect width="1920" height="1080" fill="url(#magicSky)"/>
+  
+  <!-- Luna grande -->
+  <circle cx="1600" cy="200" r="120" fill="url(#moonGlow)" opacity="0.8"/>
+  <circle cx="1600" cy="200" r="120" fill="none" stroke="#fff" stroke-width="2" opacity="0.4"/>
+  
+  <!-- Stelle scintillanti -->
+  <g opacity="0.9">
+    <circle cx="300" cy="100" r="3" fill="#fff"/>
+    <circle cx="500" cy="150" r="2" fill="#ffd700"/>
+    <circle cx="700" cy="80" r="2.5" fill="#fff"/>
+    <circle cx="900" cy="120" r="2" fill="#ffd700"/>
+    <circle cx="1100" cy="90" r="3" fill="#fff"/>
+    <circle cx="1300" cy="160" r="2" fill="#ffd700"/>
+    <circle cx="200" cy="200" r="2.5" fill="#fff"/>
+    <circle cx="800" cy="180" r="2" fill="#ffd700"/>
+    <circle cx="1400" cy="110" r="2.5" fill="#fff"/>
+    <circle cx="600" cy="220" r="2" fill="#ffd700"/>
+  </g>
+  
+  <!-- Montagne lontane stilizzate -->
+  <polygon points="0,700 300,450 600,700" fill="#1a1030" opacity="0.6"/>
+  <polygon points="400,700 800,400 1200,700" fill="#251640" opacity="0.6"/>
+  <polygon points="1000,700 1400,420 1800,700" fill="#1a1030" opacity="0.6"/>
+  <polygon points="1600,700 1920,500 1920,700" fill="#251640" opacity="0.6"/>
+  
+  <!-- Foresta stilizzata anime -->
+  <g opacity="0.7">
+    <!-- Alberi semplificati stile anime -->
+    <ellipse cx="150" cy="850" rx="80" ry="150" fill="#0d2818"/>
+    <ellipse cx="300" cy="870" rx="90" ry="170" fill="#102a1c"/>
+    <ellipse cx="480" cy="860" rx="85" ry="160" fill="#0d2818"/>
+    <ellipse cx="650" cy="880" rx="95" ry="180" fill="#102a1c"/>
+    <ellipse cx="850" cy="850" rx="80" ry="150" fill="#0d2818"/>
+    <ellipse cx="1000" cy="870" rx="90" ry="170" fill="#102a1c"/>
+    <ellipse cx="1200" cy="860" rx="85" ry="160" fill="#0d2818"/>
+    <ellipse cx="1370" cy="880" rx="95" ry="180" fill="#102a1c"/>
+    <ellipse cx="1550" cy="850" rx="80" ry="150" fill="#0d2818"/>
+    <ellipse cx="1720" cy="870" rx="90" ry="170" fill="#102a1c"/>
+  </g>
+  
+  <!-- CASTELLO PRINCIPALE - Stile Anime -->
+  
+  <!-- Torre sinistra -->
+  <rect x="600" y="500" width="120" height="400" fill="#4a3a5a" stroke="#2d1f3d" stroke-width="3"/>
+  <rect x="600" y="500" width="120" height="50" fill="#5a4a6a"/>
+  <!-- Finestre torre sinistra -->
+  <rect x="640" y="550" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <rect x="640" y="650" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <rect x="640" y="750" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <!-- Tetto torre sinistra -->
+  <polygon points="660,440 600,500 720,500" fill="#7a2d4a"/>
+  <circle cx="660" cy="420" r="25" fill="#ffd700"/>
+  
+  <!-- Corpo centrale del castello -->
+  <rect x="720" y="550" width="480" height="550" fill="#5a4a6a" stroke="#3d2f4d" stroke-width="3"/>
+  <rect x="720" y="550" width="480" height="60" fill="#6a5a7a"/>
+  
+  <!-- Porta principale grande -->
+  <path d="M 860 900 Q 860 800 960 800 Q 1060 800 1060 900 L 1060 1100 L 860 1100 Z" fill="#2d1f3d" stroke="#1a0f1d" stroke-width="3"/>
+  <circle cx="920" cy="950" r="15" fill="#ffd700"/>
+  <rect x="950" y="940" width="6" height="160" fill="#3d2f3d"/>
+  
+  <!-- Finestre castello centrale -->
+  <rect x="780" y="620" width="80" height="100" fill="#ffd700" opacity="0.9"/>
+  <rect x="900" y="620" width="80" height="100" fill="#ffd700" opacity="0.9"/>
+  <rect x="1040" y="620" width="80" height="100" fill="#ffd700" opacity="0.9"/>
+  
+  <rect x="780" y="760" width="60" height="80" fill="#ffec8b" opacity="0.8"/>
+  <rect x="870" y="760" width="60" height="80" fill="#ffec8b" opacity="0.8"/>
+  <rect x="1000" y="760" width="60" height="80" fill="#ffec8b" opacity="0.8"/>
+  <rect x="1090" y="760" width="60" height="80" fill="#ffec8b" opacity="0.8"/>
+  
+  <!-- Balcone centrale -->
+  <rect x="880" y="720" width="160" height="10" fill="#6a5a7a"/>
+  <rect x="880" y="670" width="160" height="50" fill="#transparent" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="900" y1="670" x2="900" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="920" y1="670" x2="920" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="940" y1="670" x2="940" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="960" y1="670" x2="960" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="980" y1="670" x2="980" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="1000" y1="670" x2="1000" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  <line x1="1020" y1="670" x2="1020" y2="720" stroke="#4a3a5a" stroke-width="2"/>
+  
+  <!-- Torre destra -->
+  <rect x="1200" y="500" width="120" height="400" fill="#4a3a5a" stroke="#2d1f3d" stroke-width="3"/>
+  <rect x="1200" y="500" width="120" height="50" fill="#5a4a6a"/>
+  <!-- Finestre torre destra -->
+  <rect x="1240" y="550" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <rect x="1240" y="650" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <rect x="1240" y="750" width="40" height="60" fill="#ffd700" opacity="0.8"/>
+  <!-- Tetto torre destra -->
+  <polygon points="1260,440 1200,500 1320,500" fill="#7a2d4a"/>
+  <circle cx="1260" cy="420" r="25" fill="#ffd700"/>
+  
+  <!-- Torrette decorative -->
+  <rect x="740" y="480" width="60" height="70" fill="#5a4a7a"/>
+  <polygon points="770,430 740,480 800,480" fill="#8a4d6a"/>
+  <rect x="1120" y="480" width="60" height="70" fill="#5a4a7a"/>
+  <polygon points="1150,430 1120,480 1180,480" fill="#8a4d6a"/>
+  
+  <!-- Bandiere -->
+  <line x1="660" y1="420" x2="660" y2="350" stroke="#3d2d4d" stroke-width="3"/>
+  <polygon points="660,350 660,380 700,365" fill="#dc143c"/>
+  <line x1="1260" y1="420" x2="1260" y2="350" stroke="#3d2d4d" stroke-width="3"/>
+  <polygon points="1260,350 1260,380 1220,365" fill="#dc143c"/>
+  
+  <!-- Merlature -->
+  <g fill="#6a5a7a">
+    <rect x="720" y="540" width="30" height="20"/>
+    <rect x="770" y="540" width="30" height="20"/>
+    <rect x="820" y="540" width="30" height="20"/>
+    <rect x="870" y="540" width="30" height="20"/>
+    <rect x="920" y="540" width="30" height="20"/>
+    <rect x="970" y="540" width="30" height="20"/>
+    <rect x="1020" y="540" width="30" height="20"/>
+    <rect x="1070" y="540" width="30" height="20"/>
+    <rect x="1120" y="540" width="30" height="20"/>
+    <rect x="1170" y="540" width="30" height="20"/>
+  </g>
+  
+  <!-- Luci magiche che escono dalle finestre -->
+  <g opacity="0.3">
+    <ellipse cx="820" cy="670" rx="60" ry="80" fill="#ffd700"/>
+    <ellipse cx="940" cy="670" rx="60" ry="80" fill="#ffd700"/>
+    <ellipse cx="1080" cy="670" rx="60" ry="80" fill="#ffd700"/>
+  </g>
+  
+  <!-- Sentiero illuminato -->
+  <ellipse cx="960" cy="1050" rx="200" ry="30" fill="#ffd700" opacity="0.2"/>
+  
+  <!-- Particelle magiche -->
+  <g opacity="0.6">
+    <circle cx="850" cy="600" r="4" fill="#ffd700"/>
+    <circle cx="1050" cy="650" r="3" fill="#fff"/>
+    <circle cx="900" cy="700" r="4" fill="#ffd700"/>
+    <circle cx="1100" cy="620" r="3" fill="#fff"/>
+    <circle cx="950" cy="580" r="4" fill="#ffd700"/>
+  </g>
+  
+  <!-- Nebbia in basso -->
+  <defs>
+    <linearGradient id="fog" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#e8e8ff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#e8e8ff;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="200" y="880" fill="url(#fog)"/>
+</svg>

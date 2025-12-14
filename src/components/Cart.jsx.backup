@@ -1,0 +1,131 @@
+import { useState } from 'react'
+import './Cart.css'
+
+function Cart({ cart, character, onClose, onUpdateQuantity, onSubmit }) {
+  const [notes, setNotes] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
+  const handleSubmit = () => {
+    if (cart.length === 0) {
+      alert('Il carrello è vuoto!')
+      return
+    }
+    setShowConfirm(true)
+  }
+
+  const confirmOrder = () => {
+    onSubmit(notes)
+    setShowConfirm(false)
+  }
+
+  return (
+    <>
+      <div className="cart-modal" onClick={onClose}>
+        <div className="cart-content" onClick={e => e.stopPropagation()}>
+          <h2>🛒 Il Tuo Carrello</h2>
+          
+          {cart.length === 0 ? (
+            <p className="empty-cart">Il carrello è vuoto</p>
+          ) : (
+            <>
+              <div className="cart-items">
+                {cart.map(item => (
+                  <div key={item.id} className="cart-item">
+                    <div className="cart-item-info">
+                      <h4>{item.name}</h4>
+                      <p>€{item.price.toFixed(2)} x {item.quantity}</p>
+                    </div>
+                    <div className="cart-item-controls">
+                      <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}>
+                        ➖
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}>
+                        ➕
+                      </button>
+                    </div>
+                    <div className="cart-item-total">
+                      €{(item.price * item.quantity).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="cart-notes">
+                <label>📝 Note Speciali (allergie, richieste):</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Es. Senza cipolla, allergia al latte..."
+                  rows="3"
+                />
+              </div>
+
+              <div className="cart-total">
+                <strong>Totale:</strong>
+                <strong>€{total.toFixed(2)}</strong>
+              </div>
+            </>
+          )}
+
+          <div className="cart-actions">
+            {cart.length > 0 && (
+              <button className="submit-button" onClick={handleSubmit}>
+                📦 Invia Ordine
+              </button>
+            )}
+            <button className="close-button" onClick={onClose}>
+              Continua Shopping
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showConfirm && (
+        <div className="cart-modal" onClick={() => setShowConfirm(false)}>
+          <div className="cart-content confirm-content" onClick={e => e.stopPropagation()}>
+            <h2>📋 Conferma Ordine</h2>
+            
+            <div className="confirm-character">
+              <p>Il tuo ordine sarà per:</p>
+              <h3>{character}</h3>
+            </div>
+
+            <div className="confirm-items">
+              {cart.map(item => (
+                <div key={item.id} className="confirm-item">
+                  <span>{item.name} x{item.quantity}</span>
+                  <span>€{(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            {notes && (
+              <div className="confirm-notes">
+                <strong>Note:</strong> {notes}
+              </div>
+            )}
+
+            <div className="confirm-total">
+              <strong>Totale:</strong>
+              <strong>€{total.toFixed(2)}</strong>
+            </div>
+
+            <div className="cart-actions">
+              <button className="submit-button" onClick={confirmOrder}>
+                ✅ Conferma Ordine
+              </button>
+              <button className="close-button" onClick={() => setShowConfirm(false)}>
+                ❌ Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export default Cart

@@ -1,0 +1,280 @@
+/* FACCIATA DEL CASTELLO */
+.menu-categories {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  position: relative;
+  z-index: 10;
+  background: 
+    linear-gradient(135deg, #5d4037 0%, #6d4c41 30%, #795548 60%, #6d4c41 100%);
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.8),
+    inset 0 0 100px rgba(0,0,0,0.3);
+  border: 10px solid #3e2723;
+  border-top: none;
+}
+
+/* Torre sinistra */
+.menu-categories::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  left: -80px;
+  width: 120px;
+  height: 200px;
+  background: linear-gradient(180deg, #4a3428 0%, #5d4037 50%, #6d4c41 100%);
+  border: 8px solid #3e2723;
+  border-bottom: none;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+  clip-path: polygon(
+    20% 0, 80% 0,
+    80% 20px, 90% 20px, 90% 40px, 80% 40px,
+    80% 60px, 90% 60px, 90% 80px, 80% 80px,
+    100% 80px, 100% 100%, 0 100%, 0 80px,
+    20% 80px, 20% 60px, 10% 60px, 10% 40px, 20% 40px,
+    20% 20px, 10% 20px, 10% 40px, 20% 20px
+  );
+}
+
+/* Torre destra */
+.menu-categories::after {
+  content: '';
+  position: absolute;
+  top: -150px;
+  right: -80px;
+  width: 120px;
+  height: 200px;
+  background: linear-gradient(180deg, #4a3428 0%, #5d4037 50%, #6d4c41 100%);
+  border: 8px solid #3e2723;
+  border-bottom: none;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+  clip-path: polygon(
+    20% 0, 80% 0,
+    80% 20px, 90% 20px, 90% 40px, 80% 40px,
+    80% 60px, 90% 60px, 90% 80px, 80% 80px,
+    100% 80px, 100% 100%, 0 100%, 0 80px,
+    20% 80px, 20% 60px, 10% 60px, 10% 40px, 20% 40px,
+    20% 20px, 10% 20px, 10% 40px, 20% 20px
+  );
+}
+
+.category {
+  margin: 40px 60px;
+  background: transparent;
+  position: relative;
+  min-height: 200px;
+}
+
+/* Cornice della finestra (sempre visibile) */
+.category::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 250px;
+  background: linear-gradient(135deg, #3e2723 0%, #4a3428 100%);
+  border: 8px solid #2c1810;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 
+    inset 0 0 30px rgba(0,0,0,0.8),
+    0 10px 40px rgba(0,0,0,0.8);
+  clip-path: polygon(
+    10% 0, 90% 0,
+    90% 5%, 95% 10%, 95% 90%, 90% 95%, 90% 100%,
+    10% 100%, 10% 95%, 5% 90%, 5% 10%, 10% 5%
+  );
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Targhetta/Scritta sulla finestra */
+.category-title {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 350px;
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+  color: #ffd700;
+  padding: 20px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  border: 5px solid #2c1810;
+  border-radius: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  text-align: center;
+  box-shadow: 
+    0 5px 15px rgba(0,0,0,0.8),
+    inset 0 0 20px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+/* Lucine/candele ai lati */
+.category-title::before {
+  content: '�️';
+  position: absolute;
+  left: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  animation: flicker 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px rgba(255, 200, 100, 0.8));
+}
+
+.category-title::after {
+  content: '�️';
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  animation: flicker 1.5s ease-in-out infinite;
+  animation-delay: 0.75s;
+  filter: drop-shadow(0 0 15px rgba(255, 200, 100, 0.8));
+}
+
+@keyframes flicker {
+  0%, 100% { 
+    opacity: 1; 
+    transform: translateY(-50%) scale(1);
+    filter: drop-shadow(0 0 15px rgba(255, 200, 100, 0.8));
+  }
+  50% { 
+    opacity: 0.85; 
+    transform: translateY(-50%) scale(1.05);
+    filter: drop-shadow(0 0 25px rgba(255, 200, 100, 1));
+  }
+}
+
+.category-title:hover {
+  background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%);
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(0,0,0,0.9),
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+.items {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 250px;
+  overflow: hidden;
+  perspective: 1000px;
+  z-index: 2;
+}
+
+/* ANTE DELLA FINESTRA CHIUSE */
+.items::before,
+.items::after {
+  content: '';
+  position: absolute;
+  top: 25px;
+  width: 48%;
+  height: calc(100% - 50px);
+  background: 
+    linear-gradient(135deg, #1a1410 0%, #2c1f1a 50%, #3e2a23 100%);
+  border: 6px solid #0d0805;
+  transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-style: preserve-3d;
+  z-index: 15;
+  box-shadow: 
+    inset 0 0 20px rgba(0,0,0,0.9),
+    0 10px 30px rgba(0,0,0,0.8);
+}
+
+/* Anta sinistra */
+.items::before {
+  left: 30px;
+  transform-origin: left center;
+  border-right: 3px solid #0d0805;
+}
+
+/* Anta destra */
+.items::after {
+  right: 30px;
+  transform-origin: right center;
+  border-left: 3px solid #0d0805;
+}
+
+/* Contenuto nascosto quando chiuso */
+.items:not(.open) {
+  pointer-events: none;
+}
+
+.items:not(.open) > * {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.5s ease;
+}
+
+/* FINESTRA APERTA */
+.items.open::before {
+  transform: perspective(1000px) rotateY(-135deg);
+  box-shadow: 
+    inset 0 0 20px rgba(0,0,0,0.9),
+    -15px 10px 50px rgba(0,0,0,0.9);
+}
+
+.items.open::after {
+  transform: perspective(1000px) rotateY(135deg);
+  box-shadow: 
+    inset 0 0 20px rgba(0,0,0,0.9),
+    15px 10px 50px rgba(0,0,0,0.9);
+}
+
+/* Luce magica che esce dalla finestra aperta */
+.items.open {
+  pointer-events: auto;
+}
+
+.items.open > * {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.8s ease 0.5s;
+}
+
+/* Sfondo interno della finestra aperta */
+.items.open {
+  background: radial-gradient(circle at center, 
+    rgba(255, 215, 0, 0.2) 0%,
+    rgba(255, 165, 0, 0.1) 50%,
+    transparent 100%);
+  box-shadow: 
+    inset 0 0 50px rgba(255, 215, 0, 0.3),
+    0 0 100px rgba(255, 215, 0, 0.2);
+  animation: glowWindow 2s ease-in-out infinite;
+}
+
+@keyframes glowWindow {
+  0%, 100% { 
+    box-shadow: 
+      inset 0 0 50px rgba(255, 215, 0, 0.3),
+      0 0 100px rgba(255, 215, 0, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 0 70px rgba(255, 215, 0, 0.5),
+      0 0 150px rgba(255, 215, 0, 0.4);
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-categories {
+    padding: 10px;
+  }
+  
+  .category-title {
+    font-size: 1.2rem;
+    padding: 15px;
+  }
+}

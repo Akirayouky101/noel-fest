@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Unico - Noel Fest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #1a4d2e, #0d2818);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .qr-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            border: 4px solid #FFD700;
+        }
+
+        .qr-card h2 {
+            color: #8B0000;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .qr-card img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: 20px 0;
+            border: 3px solid #8B0000;
+            border-radius: 12px;
+        }
+
+        .qr-url {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+
+        .info {
+            color: #FFD700;
+            background: linear-gradient(135deg, #8B0000, #A52A2A);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            text-align: center;
+            border: 3px solid #FFD700;
+        }
+
+        .info h3 {
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            margin: 5px 0;
+            font-size: 0.95rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #8B0000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .info, .button-group {
+                display: none;
+            }
+
+            .qr-card {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎄 QR Code Unico - Noel Fest</h1>
+
+        <div class="qr-card">
+            <h2>Menu Ordini</h2>
+            <img id="qr-code" alt="QR Code Noel Fest" />
+            <div class="qr-url" id="url-display"></div>
+            
+            <div class="button-group">
+                <button onclick="window.print()">🖨️ Stampa QR</button>
+                <button onclick="downloadQR()">💾 Scarica PNG</button>
+            </div>
+        </div>
+
+        <div class="info">
+            <h3>ℹ️ Informazioni</h3>
+            <p>Questo è il QR code <strong>UNICO</strong> per tutti i clienti</p>
+            <p>Porta direttamente alla pagina principale del menu</p>
+            <p>Scansionando il QR, i clienti possono ordinare e prenotare</p>
+            <p><strong>Non cambierà mai</strong> - può essere stampato e riutilizzato</p>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://noelfest.appdataconnect.it';
+        
+        function generateQR() {
+            const qrImg = document.getElementById('qr-code');
+            const urlDisplay = document.getElementById('url-display');
+            
+            // URL unico senza parametri
+            const url = BASE_URL;
+            
+            // Genera QR usando API pubblica
+            const qrData = encodeURIComponent(url);
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${qrData}&color=8B0000&bgcolor=FFFFFF&margin=20`;
+            
+            urlDisplay.textContent = url;
+        }
+
+        function downloadQR() {
+            const qrImg = document.getElementById('qr-code');
+            const link = document.createElement('a');
+            link.href = qrImg.src;
+            link.download = 'noel-fest-qr-menu.png';
+            link.click();
+        }
+
+        // Genera automaticamente al caricamento
+        window.onload = () => generateQR();
+    </script>
+</body>
+</html>
