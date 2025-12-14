@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getAllSystemConfig } from '../lib/supabaseAPI'
 
 export default function SessionSelectionModal({ show, onClose, onConfirm }) {
   const [selectedSession, setSelectedSession] = useState(null)
@@ -14,18 +15,13 @@ export default function SessionSelectionModal({ show, onClose, onConfirm }) {
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const response = await fetch('/api/config.php')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.config) {
-            setConfig({
-              lunch_start: data.config.lunch_start || '12:00',
-              lunch_end: data.config.lunch_end || '15:00',
-              dinner_start: data.config.dinner_start || '19:00',
-              dinner_end: data.config.dinner_end || '23:00'
-            })
-          }
-        }
+        const data = await getAllSystemConfig()
+        setConfig({
+          lunch_start: data.lunch_start || '12:00',
+          lunch_end: data.lunch_end || '15:00',
+          dinner_start: data.dinner_start || '19:00',
+          dinner_end: data.dinner_end || '23:00'
+        })
       } catch (error) {
         console.error('Errore caricamento configurazione:', error)
       }

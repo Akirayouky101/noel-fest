@@ -85,6 +85,24 @@ export async function updateOrderPeople(orderId, numPeople) {
   if (error) throw error
 }
 
+export async function updateMultipleOrdersStatus(orderIds, newStatus) {
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: newStatus })
+    .in('id', orderIds)
+  
+  if (error) throw error
+}
+
+export async function deleteMultipleOrders(orderIds) {
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .in('id', orderIds)
+  
+  if (error) throw error
+}
+
 // =============================================
 // POSTI DISPONIBILI
 // =============================================

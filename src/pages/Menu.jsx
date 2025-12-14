@@ -3,6 +3,7 @@ import Cart from '../components/Cart'
 import SessionSelectionModal from '../components/SessionSelectionModal'
 import { menuData } from '../data/menuData'
 import { getRandomCharacter } from '../data/characters'
+import { getAvailableSeats, createOrder, createReservation } from '../lib/supabaseAPI'
 import './Menu.css'
 
 const categories = [
@@ -59,11 +60,8 @@ function Menu() {
 
   const fetchAvailableSeats = async () => {
     try {
-      const response = await fetch('/api/seats.php')
-      const data = await response.json()
-      if (data.available !== undefined) {
-        setAvailableSeats(data.available)
-      }
+      const available = await getAvailableSeats()
+      setAvailableSeats(available)
     } catch (error) {
       console.error('Errore caricamento posti:', error)
     }
@@ -120,22 +118,8 @@ function Menu() {
       try {
         console.log('🪑 Creazione prenotazione:', { character, email: submittedEmail, num_people: people })
         
-        const response = await fetch('/api/reservations.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            character,
-            email: submittedEmail,
-            num_people: people
-          })
-        })
-        
-        const result = await response.json()
-        console.log('✅ Risposta prenotazione:', result)
-        
-        if (!response.ok) {
-          console.error('❌ Errore HTTP prenotazione:', response.status, result)
-        }
+        await createReservation(character, people)
+        console.log('✅ Prenotazione creata con successo')
         
         // Aggiorna immediatamente il contatore posti
         await fetchAvailableSeats()
@@ -194,16 +178,14 @@ function Menu() {
       character,
       email,
       num_people: numPeople,
-      order_type: orderType,
+      orderType,
       items: cart,
       notes,
       total: subtotal + copertoTotal,
       // Aggiungi dati sessione se è una prenotazione
-      ...(sessionData && {
-        session_type: sessionData.sessionType,
-        session_date: sessionData.sessionDate,
-        session_time: sessionData.sessionTime
-      })
+      sessionType: sessionData?.sessionType || 'immediate',
+      sessionDate: sessionData?.sessionDate || null,
+      sessionTime: sessionData?.sessionTime || null
     }
 
     console.log('🔍 DEBUG - orderType:', orderType)
@@ -211,26 +193,16 @@ function Menu() {
     console.log('🔍 DEBUG - orderData completo:', orderData)
 
     try {
-      const response = await fetch('/api/orders.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      })
+      await createOrder(orderData)
+      console.log('✅ Ordine creato con successo')
 
-      const result = await response.json()
-      console.log('Risposta server:', result)
-
-      if (response.ok) {
-        setCart([])
-        setShowCart(false)
-        setShowSuccess(true)
-        setTimeout(() => setShowSuccess(false), 3000)
-      } else {
-        console.error('Errore dal server:', result)
-        throw new Error('Errore invio: ' + (result.error || 'Sconosciuto'))
-      }
+      setCart([])
+      setShowCart(false)
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
     } catch (error) {
       console.error('Errore completo:', error)
+      alert('Errore durante l\'invio dell\'ordine: ' + error.message)
       throw error
     }
   }

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
+import { getAllSystemConfig, updateMultipleConfigs } from '../lib/supabaseAPI'
 import './Settings.css'
 
 export default function Settings() {
   const [config, setConfig] = useState({
-    total_seats: 150,
-    walkin_seats: 100,
-    coperto_price: 1.50,
-    reservations_enabled: true,
-    orders_enabled: true,
+    total_seats: '150',
+    walkin_seats: '100',
+    coperto_price: '1.50',
+    reservations_enabled: 'true',
+    orders_enabled: 'true',
     lunch_start: '12:00',
     lunch_end: '15:00',
     dinner_start: '19:00',
@@ -23,13 +24,8 @@ export default function Settings() {
 
   const loadConfig = async () => {
     try {
-      const response = await fetch('/api/config.php')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setConfig(data.config)
-        }
-      }
+      const data = await getAllSystemConfig()
+      setConfig(data)
     } catch (error) {
       console.error('Errore caricamento configurazione:', error)
     } finally {
@@ -40,22 +36,12 @@ export default function Settings() {
   const saveConfig = async () => {
     setSaving(true)
     try {
-      const response = await fetch('/api/config.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config)
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setSuccessMessage('✅ Configurazione salvata con successo!')
-          setTimeout(() => setSuccessMessage(''), 3000)
-        }
-      }
+      await updateMultipleConfigs(config)
+      setSuccessMessage('✅ Configurazione salvata con successo!')
+      setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error) {
       console.error('Errore salvataggio:', error)
-      alert('Errore durante il salvataggio')
+      alert('Errore durante il salvataggio: ' + error.message)
     } finally {
       setSaving(false)
     }
@@ -64,11 +50,11 @@ export default function Settings() {
   const resetToDefaults = () => {
     if (confirm('Sei sicuro di voler ripristinare i valori predefiniti?')) {
       setConfig({
-        total_seats: 150,
-        walkin_seats: 100,
-        coperto_price: 1.50,
-        reservations_enabled: true,
-        orders_enabled: true,
+        total_seats: '150',
+        walkin_seats: '100',
+        coperto_price: '1.50',
+        reservations_enabled: 'true',
+        orders_enabled: 'true',
         lunch_start: '12:00',
         lunch_end: '15:00',
         dinner_start: '19:00',
@@ -116,7 +102,7 @@ export default function Settings() {
               min="0"
               max="500"
               value={config.total_seats}
-              onChange={(e) => setConfig({ ...config, total_seats: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setConfig({ ...config, total_seats: e.target.value })}
               className="setting-input"
             />
           </div>
@@ -131,7 +117,7 @@ export default function Settings() {
               min="0"
               max="500"
               value={config.walkin_seats}
-              onChange={(e) => setConfig({ ...config, walkin_seats: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setConfig({ ...config, walkin_seats: e.target.value })}
               className="setting-input"
             />
           </div>
@@ -139,7 +125,7 @@ export default function Settings() {
           <div className="seats-preview">
             <div className="preview-card">
               <span className="preview-label">Totale Posti Sistema:</span>
-              <span className="preview-value">{config.total_seats + config.walkin_seats}</span>
+              <span className="preview-value">{parseInt(config.total_seats || 0) + parseInt(config.walkin_seats || 0)}</span>
             </div>
           </div>
         </div>
@@ -159,7 +145,7 @@ export default function Settings() {
               max="10"
               step="0.10"
               value={config.coperto_price}
-              onChange={(e) => setConfig({ ...config, coperto_price: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setConfig({ ...config, coperto_price: e.target.value })}
               className="setting-input"
             />
           </div>

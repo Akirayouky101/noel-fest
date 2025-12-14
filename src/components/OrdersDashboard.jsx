@@ -2,7 +2,21 @@ import { useState, useEffect, useRef } from 'react'
 import { menuData } from '../data/menuData'
 import { printOrder } from '../utils/printUtils'
 import CharacterArrivalCard from './CharacterArrivalCard'
-import { supabase } from '../lib/supabase'
+import { 
+  getAllOrders, 
+  updateMultipleOrdersStatus, 
+  deleteMultipleOrders,
+  updateOrderPeople,
+  getAvailableSeats,
+  getAvailableWalkinSeats,
+  getActiveReservations,
+  getWalkinSeats,
+  deleteReservation,
+  updateReservationPeople,
+  deleteWalkinSeats,
+  createWalkinSeats,
+  getSystemConfig
+} from '../lib/supabaseAPI'
 import '../pages/Admin.css'
 
 export default function OrdersDashboard() {
@@ -251,13 +265,7 @@ export default function OrdersDashboard() {
       const ids = order.orderIds || [order.id]
       
       // Aggiorna tutti gli ordini
-      for (const orderId of ids) {
-        await fetch('/api/orders.php', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, status: newStatus })
-        })
-      }
+      await updateMultipleOrdersStatus(ids, newStatus)
       
       // Se l'ordine viene ANNULLATO, libera i posti (sia prenotabili che walk-in)
       // (NON quando completato, perché il tavolo è ancora occupato)
@@ -279,43 +287,23 @@ export default function OrdersDashboard() {
       const ids = order.orderIds || [order.id]
       console.log('Eliminando ordini:', ids)
       
-      let allSuccess = true
-      for (const orderId of ids) {
-        const response = await fetch('/api/orders.php', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId })
-        })
-        
-        const result = await response.json()
-        if (!result.success) {
-          console.error('Errore eliminazione ordine:', orderId, result)
-          allSuccess = false
-        }
-      }
+      await deleteMultipleOrders(ids)
       
-      if (allSuccess) {
-        // Libera i posti prenotabili (sia per at_register che per immediate con walk-in)
-        await freeSeatsForCharacter(order.character, true)
-        
-        // Libera anche eventuali posti walk-in occupati
-        await freeWalkinSeatsForCharacter(order.character, true)
-        
-        setDeleteModal({ show: false, orderId: null, characterName: '' })
-        loadOrders()
-        loadAvailableSeats()
-        loadWalkinSeats()
-      } else {
-        setSuccessModal({ 
-          show: true, 
-          message: '❌ Errore: impossibile eliminare alcuni ordini' 
-        })
-      }
+      // Libera i posti prenotabili (sia per at_register che per immediate con walk-in)
+      await freeSeatsForCharacter(order.character, true)
+      
+      // Libera anche eventuali posti walk-in occupati
+      await freeWalkinSeatsForCharacter(order.character, true)
+      
+      setDeleteModal({ show: false, orderId: null, characterName: '' })
+      loadOrders()
+      loadAvailableSeats()
+      loadWalkinSeats()
     } catch (error) {
       console.error('Errore eliminazione ordine:', error)
       setSuccessModal({ 
         show: true, 
-        message: '❌ Errore di connessione' 
+        message: '❌ Errore: impossibile eliminare gli ordini - ' + error.message
       })
     }
   }
