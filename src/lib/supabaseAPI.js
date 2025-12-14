@@ -188,6 +188,15 @@ export async function deleteWalkinSeats(characterName) {
   if (error) throw error
 }
 
+export async function updateWalkinSeats(characterName, numSeats) {
+  const { error } = await supabase
+    .from('walkin_seats')
+    .update({ num_seats: numSeats })
+    .eq('character_name', characterName)
+  
+  if (error) throw error
+}
+
 // =============================================
 // CONFIGURAZIONE SISTEMA
 // =============================================

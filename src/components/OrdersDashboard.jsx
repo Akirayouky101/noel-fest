@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { menuData } from '../data/menuData'
 import { printOrder } from '../utils/printUtils'
 import CharacterArrivalCard from './CharacterArrivalCard'
+import { supabase } from '../lib/supabase'
 import { 
   getAllOrders, 
   updateMultipleOrdersStatus, 
@@ -14,6 +15,7 @@ import {
   deleteReservation,
   updateReservationPeople,
   deleteWalkinSeats,
+  updateWalkinSeats,
   createWalkinSeats,
   getSystemConfig
 } from '../lib/supabaseAPI'
@@ -336,71 +338,25 @@ export default function OrdersDashboard() {
     const newTotal = itemsTotal + (COPERTO * newNumPeople)
     
     try {
-      // Aggiorna l'ordine
-      const response = await fetch('/api/orders.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          orderId: order.id, 
-          num_people: newNumPeople,
-          total: newTotal
-        })
-      })
-      
-      if (!response.ok) {
-        setSuccessModal({ 
-          show: true, 
-          message: '❌ Errore aggiornamento numero persone' 
-        })
-        return
+      // Aggiorna tutti gli ordini del gruppo
+      const ids = order.orderIds || [order.id]
+      for (const orderId of ids) {
+        await updateOrderPeople(orderId, newNumPeople)
+        // Aggiorna anche il totale
+        await supabase
+          .from('orders')
+          .update({ total: newTotal })
+          .eq('id', orderId)
       }
       
-      // Se è una prenotazione (at_register), aggiorna seat_reservations
+      // Se è una prenotazione (at_register), aggiorna active_reservations
       if (order.orderType === 'at_register' && activeReservations.has(order.character)) {
-        const resResponse = await fetch('/api/reservations.php')
-        const resData = await resResponse.json()
-        
-        if (resData.success && resData.reservations) {
-          const reservation = resData.reservations.find(
-            r => r.character_name === order.character && r.status === 'active'
-          )
-          
-          if (reservation) {
-            // Aggiorna num_people nella prenotazione
-            await fetch('/api/reservations.php', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: reservation.id,
-                num_people: newNumPeople
-              })
-            })
-          }
-        }
+        await updateReservationPeople(order.character, newNumPeople)
       }
       
       // Se è un ordine immediate con walk-in attivo, aggiorna walkin_seats
       if (order.orderType === 'immediate' && activeWalkinCharacters.has(order.character)) {
-        const walkinResponse = await fetch('/api/walkin-seats.php')
-        const walkinData = await walkinResponse.json()
-        
-        if (walkinData.success && walkinData.walkins) {
-          const walkin = walkinData.walkins.find(
-            w => w.character_name === order.character && w.status === 'active'
-          )
-          
-          if (walkin) {
-            // Aggiorna num_seats nel walk-in
-            await fetch('/api/walkin-seats.php', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: walkin.id,
-                num_seats: newNumPeople
-              })
-            })
-          }
-        }
+        await updateWalkinSeats(order.character, newNumPeople)
       }
       
       loadOrders()
@@ -415,25 +371,16 @@ export default function OrdersDashboard() {
       console.error('Errore aggiornamento num_people:', error)
       setSuccessModal({ 
         show: true, 
-        message: '❌ Errore di connessione' 
+        message: '❌ Errore: ' + error.message
       })
     }
   }
 
   const freeWalkinSeatsForCharacter = async (characterName, silent = false) => {
     try {
-      const response = await fetch('/api/walkin-seats.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ character_name: characterName })
-      })
-      
-      const data = await response.json()
-      
-      if (data.success && data.rows_affected > 0) {
-        if (!silent) console.log(`Liberati posti walk-in per ${characterName}`)
-        loadWalkinSeats()
-      }
+      await deleteWalkinSeats(characterName)
+      if (!silent) console.log(`Liberati posti walk-in per ${characterName}`)
+      loadWalkinSeats()
     } catch (error) {
       console.error('Errore liberazione posti walk-in:', error)
     }
@@ -441,88 +388,47 @@ export default function OrdersDashboard() {
 
   const updateOrderItems = async (orderId, newItems, newTotal) => {
     try {
-      const response = await fetch('/api/orders.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          orderId, 
+      await supabase
+        .from('orders')
+        .update({ 
           items: newItems,
           total: newTotal
         })
-      })
+        .eq('id', orderId)
       
-      if (response.ok) {
-        loadOrders()
-        closeEditModal()
-      } else {
-        setSuccessModal({ 
-          show: true, 
-          message: '❌ Errore aggiornamento ordine' 
-        })
-      }
+      loadOrders()
+      closeEditModal()
+      setSuccessModal({ 
+        show: true, 
+        message: '✅ Ordine aggiornato con successo' 
+      })
     } catch (error) {
       console.error('Errore aggiornamento items:', error)
       setSuccessModal({ 
         show: true, 
-        message: '❌ Errore di connessione' 
+        message: '❌ Errore: ' + error.message
       })
     }
   }
 
   const freeSeatsForCharacter = async (characterName, silent = false) => {
     try {
-      // Cerca la prenotazione attiva per questo personaggio
-      const response = await fetch('/api/reservations.php')
-      const data = await response.json()
+      await deleteReservation(characterName)
       
-      if (data.success && data.reservations) {
-        const reservation = data.reservations.find(
-          r => r.character_name === characterName && r.status === 'active'
-        )
-        
-        if (reservation) {
-          // Aggiorna lo status a 'completed'
-          const updateResponse = await fetch('/api/reservations.php', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: reservation.id,
-              status: 'completed'
-            })
-          })
-          
-          if (updateResponse.ok) {
-            if (!silent) {
-              setSuccessModal({ 
-                show: true, 
-                message: `✅ Posti liberati per ${characterName}` 
-              })
-            }
-            loadAvailableSeats()
-            loadActiveReservations() // Ricarica le prenotazioni attive per aggiornare il pulsante
-          } else {
-            if (!silent) {
-              setSuccessModal({ 
-                show: true, 
-                message: '❌ Errore liberazione posti' 
-              })
-            }
-          }
-        } else {
-          if (!silent) {
-            setSuccessModal({ 
-              show: true, 
-              message: '⚠️ Nessuna prenotazione attiva trovata' 
-            })
-          }
-        }
+      if (!silent) {
+        setSuccessModal({ 
+          show: true, 
+          message: `✅ Posti liberati per ${characterName}` 
+        })
       }
+      loadAvailableSeats()
+      loadActiveReservations() // Ricarica le prenotazioni attive per aggiornare il pulsante
     } catch (error) {
       console.error('Errore liberazione posti:', error)
       if (!silent) {
         setSuccessModal({ 
           show: true, 
-          message: '❌ Errore di connessione' 
+          message: '❌ Errore liberazione posti: ' + error.message
         })
       }
     }
