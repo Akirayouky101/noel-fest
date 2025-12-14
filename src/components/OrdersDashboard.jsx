@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { menuData } from '../data/menuData'
 import { printOrder } from '../utils/printUtils'
 import CharacterArrivalCard from './CharacterArrivalCard'
+import { supabase } from '../lib/supabase'
 import '../pages/Admin.css'
 
 export default function OrdersDashboard() {
@@ -53,107 +54,130 @@ export default function OrdersDashboard() {
 
   const loadOrders = async () => {
     try {
-      const response = await fetch('/api/orders.php')
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Controlla nuovi ordini per audio alert
-        if (lastOrderCount > 0 && data.length > lastOrderCount && audioEnabled) {
-          playNotificationSound()
-        }
-        setLastOrderCount(data.length)
-        
-        // Raggruppa ordini per character, poi per arrival_group_id
-        const characterGroups = {}
-        
-        data.forEach(order => {
-          const char = order.character
-          const arrivalId = order.arrival_group_id || 'default'
-          
-          // Inizializza il gruppo character se non esiste
-          if (!characterGroups[char]) {
-            characterGroups[char] = {
-              character: char,
-              arrivals: {},
-              totalArrivals: 0
-            }
-          }
-          
-          // Inizializza il gruppo arrival se non esiste
-          if (!characterGroups[char].arrivals[arrivalId]) {
-            characterGroups[char].arrivals[arrivalId] = {
-              arrival_group_id: arrivalId,
-              orders: [],
-              items: [],
-              total: 0,
-              num_people: 0,
-              orderIds: [],
-              email: order.email,
-              orderType: order.orderType,
-              status: order.status,
-              timestamp: order.timestamp,
-              notes: order.notes || ''
-            }
-            characterGroups[char].totalArrivals++
-          }
-          
-          const arrivalGroup = characterGroups[char].arrivals[arrivalId]
-          
-          // Aggiungi l'ordine all'arrival
-          arrivalGroup.orders.push(order)
-          arrivalGroup.orderIds.push(order.id)
-          
-          // Unisci items
-          order.items.forEach(newItem => {
-            const existing = arrivalGroup.items.find(i => i.id === newItem.id)
-            if (existing) {
-              existing.quantity += newItem.quantity
-            } else {
-              arrivalGroup.items.push({...newItem})
-            }
-          })
-          
-          // Somma totali e persone
-          arrivalGroup.total = (parseFloat(arrivalGroup.total) + parseFloat(order.total)).toFixed(2)
-          arrivalGroup.num_people += order.num_people
-          
-          // Mantieni lo status meno avanzato (pending < preparing < completed)
-          const statusPriority = { 'pending': 0, 'preparing': 1, 'completed': 2, 'cancelled': 3 }
-          if (statusPriority[order.status] < statusPriority[arrivalGroup.status]) {
-            arrivalGroup.status = order.status
-          }
-          
-          // Usa il timestamp più recente
-          if (new Date(order.timestamp) > new Date(arrivalGroup.timestamp)) {
-            arrivalGroup.timestamp = order.timestamp
-          }
-          
-          // Aggiungi note se ci sono
-          if (order.notes && !arrivalGroup.notes.includes(order.notes)) {
-            arrivalGroup.notes += (arrivalGroup.notes ? ' | ' : '') + order.notes
-          }
-        })
-        
-        // Converti in array flat per la visualizzazione
-        const flatOrders = []
-        Object.values(characterGroups).forEach(charGroup => {
-          const arrivals = Object.values(charGroup.arrivals)
-          // Ordina gli arrivi per timestamp
-          arrivals.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-          
-          arrivals.forEach((arrival, index) => {
-            flatOrders.push({
-              ...arrival,
-              character: charGroup.character,
-              arrivalNumber: index + 1,
-              totalArrivals: charGroup.totalArrivals,
-              allArrivals: arrivals // Tutti gli arrivi per questo personaggio
-            })
-          })
-        })
-        
-        setOrders(flatOrders)
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('timestamp', { ascending: true })
+      
+      if (error) throw error
+      
+      // Trasforma i dati dal formato PostgreSQL al formato precedente
+      const transformedData = data.map(order => ({
+        id: order.id,
+        character: order.character_name,
+        email: order.email,
+        num_people: order.num_people,
+        orderType: order.order_type,
+        sessionType: order.session_type,
+        sessionDate: order.session_date,
+        sessionTime: order.session_time,
+        items: order.items, // JSONB viene già parsato automaticamente
+        notes: order.notes,
+        total: parseFloat(order.total),
+        status: order.status,
+        timestamp: order.timestamp,
+        arrival_group_id: order.arrival_group_id
+      }))
+      
+      // Controlla nuovi ordini per audio alert
+      if (lastOrderCount > 0 && transformedData.length > lastOrderCount && audioEnabled) {
+        playNotificationSound()
       }
+      setLastOrderCount(transformedData.length)
+      
+      // Raggruppa ordini per character, poi per arrival_group_id
+      const characterGroups = {}
+      
+      transformedData.forEach(order => {
+        const char = order.character
+        const arrivalId = order.arrival_group_id || 'default'
+        
+        // Inizializza il gruppo character se non esiste
+        if (!characterGroups[char]) {
+          characterGroups[char] = {
+            character: char,
+            arrivals: {},
+            totalArrivals: 0
+          }
+        }
+        
+        // Inizializza il gruppo arrival se non esiste
+        if (!characterGroups[char].arrivals[arrivalId]) {
+          characterGroups[char].arrivals[arrivalId] = {
+            arrival_group_id: arrivalId,
+            orders: [],
+            items: [],
+            total: 0,
+            num_people: 0,
+            orderIds: [],
+            email: order.email,
+            orderType: order.orderType,
+            sessionType: order.sessionType,
+            sessionDate: order.sessionDate,
+            sessionTime: order.sessionTime,
+            status: order.status,
+            timestamp: order.timestamp,
+            notes: order.notes || ''
+          }
+          characterGroups[char].totalArrivals++
+        }
+        
+        const arrivalGroup = characterGroups[char].arrivals[arrivalId]
+        
+        // Aggiungi l'ordine all'arrival
+        arrivalGroup.orders.push(order)
+        arrivalGroup.orderIds.push(order.id)
+        
+        // Unisci items
+        order.items.forEach(newItem => {
+          const existing = arrivalGroup.items.find(i => i.id === newItem.id)
+          if (existing) {
+            existing.quantity += newItem.quantity
+          } else {
+            arrivalGroup.items.push({...newItem})
+          }
+        })
+        
+        // Somma totali e persone
+        arrivalGroup.total = (parseFloat(arrivalGroup.total) + parseFloat(order.total)).toFixed(2)
+        arrivalGroup.num_people += order.num_people
+        
+        // Mantieni lo status meno avanzato (pending < preparing < completed)
+        const statusPriority = { 'pending': 0, 'preparing': 1, 'completed': 2, 'cancelled': 3 }
+        if (statusPriority[order.status] < statusPriority[arrivalGroup.status]) {
+          arrivalGroup.status = order.status
+        }
+        
+        // Usa il timestamp più recente
+        if (new Date(order.timestamp) > new Date(arrivalGroup.timestamp)) {
+          arrivalGroup.timestamp = order.timestamp
+        }
+        
+        // Aggiungi note se ci sono
+        if (order.notes && !arrivalGroup.notes.includes(order.notes)) {
+          arrivalGroup.notes += (arrivalGroup.notes ? ' | ' : '') + order.notes
+        }
+      })
+      
+      // Converti in array flat per la visualizzazione
+      const flatOrders = []
+      Object.values(characterGroups).forEach(charGroup => {
+        const arrivals = Object.values(charGroup.arrivals)
+        // Ordina gli arrivi per timestamp
+        arrivals.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        
+        arrivals.forEach((arrival, index) => {
+          flatOrders.push({
+            ...arrival,
+            character: charGroup.character,
+            arrivalNumber: index + 1,
+            totalArrivals: charGroup.totalArrivals,
+            allArrivals: arrivals // Tutti gli arrivi per questo personaggio
+          })
+        })
+      })
+      
+      setOrders(flatOrders)
     } catch (error) {
       console.error('Errore caricamento ordini:', error)
     } finally {
@@ -163,11 +187,9 @@ export default function OrdersDashboard() {
 
   const loadAvailableSeats = async () => {
     try {
-      const response = await fetch('/api/seats.php')
-      const data = await response.json()
-      if (data.available !== undefined) {
-        setAvailableSeats(data.available)
-      }
+      const { data: available, error } = await supabase.rpc('get_available_seats')
+      if (error) throw error
+      setAvailableSeats(available || 150)
     } catch (error) {
       console.error('Errore caricamento posti:', error)
     }
@@ -175,16 +197,13 @@ export default function OrdersDashboard() {
 
   const loadActiveReservations = async () => {
     try {
-      const response = await fetch('/api/reservations.php')
-      const data = await response.json()
-      if (data.success && data.reservations) {
-        const activeChars = new Set(
-          data.reservations
-            .filter(r => r.status === 'active')
-            .map(r => r.character_name)
-        )
-        setActiveReservations(activeChars)
-      }
+      const { data, error } = await supabase
+        .from('active_reservations')
+        .select('character_name')
+      
+      if (error) throw error
+      const activeChars = new Set(data.map(r => r.character_name))
+      setActiveReservations(activeChars)
     } catch (error) {
       console.error('Errore caricamento prenotazioni:', error)
     }
@@ -192,29 +211,33 @@ export default function OrdersDashboard() {
 
   const loadWalkinSeats = async () => {
     try {
-      const response = await fetch('/api/walkin-seats.php')
-      const data = await response.json()
+      // Usa la funzione RPC per ottenere i posti disponibili
+      const { data: available, error: availError } = await supabase.rpc('get_available_walkin_seats')
+      if (availError) throw availError
       
-      if (data.success) {
-        setWalkinSeats({ 
-          total: data.total, 
-          occupied: data.occupied 
-        })
-      }
+      // Ottieni il totale dalla configurazione
+      const { data: configData, error: configError } = await supabase
+        .from('system_config')
+        .select('config_value')
+        .eq('config_key', 'walkin_seats')
+        .single()
       
-      // Carica anche i personaggi con walk-in attivi
-      const detailsResponse = await fetch('/api/walkin-seats.php?details=1')
-      const detailsData = await detailsResponse.json()
+      if (configError) throw configError
       
-      console.log('Response walkin details:', detailsData)
+      const total = parseInt(configData.config_value)
+      const occupied = total - (available || 0)
       
-      if (detailsData.success && detailsData.characters) {
-        console.log('Personaggi con walk-in attivi:', detailsData.characters)
-        setActiveWalkinCharacters(new Set(detailsData.characters))
-      } else {
-        console.log('Nessun personaggio walk-in attivo')
-        setActiveWalkinCharacters(new Set())
-      }
+      setWalkinSeats({ total, occupied })
+      
+      // Carica i personaggi con walk-in attivi
+      const { data: walkinChars, error: walkinError } = await supabase
+        .from('walkin_seats')
+        .select('character_name')
+      
+      if (walkinError) throw walkinError
+      
+      console.log('Personaggi con walk-in attivi:', walkinChars)
+      setActiveWalkinCharacters(new Set(walkinChars.map(w => w.character_name)))
     } catch (error) {
       console.error('Errore caricamento posti walk-in:', error)
       // Fallback in caso di errore
