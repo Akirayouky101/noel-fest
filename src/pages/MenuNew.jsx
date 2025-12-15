@@ -211,10 +211,6 @@ function MenuNew() {
   // MENU PRINCIPALE CON SIDEBAR
   return (
     <div className="menu-layout">
-      <video className="video-background" autoPlay loop muted playsInline>
-        <source src="/Sfondo1.mp4" type="video/mp4" />
-      </video>
-
       {/* HEADER */}
       <header className="menu-header">
         <div className="header-left">
@@ -331,9 +327,6 @@ function MenuNew() {
 function WelcomeModal({ onStart, availableSeats }) {
   return (
     <div className="welcome-modal-overlay">
-      <video className="video-background" autoPlay loop muted playsInline>
-        <source src="/Sfondo1.mp4" type="video/mp4" />
-      </video>
       <div className="welcome-modal">
         <div className="welcome-header">
           <h1>🎄 Benvenuto al Noel Fest</h1>
@@ -381,9 +374,6 @@ function EmailModal({ character, orderType, onSubmit }) {
 
   return (
     <div className="email-modal-overlay">
-      <video className="video-background" autoPlay loop muted playsInline>
-        <source src="/Sfondo1.mp4" type="video/mp4" />
-      </video>
       <div className="email-modal">
         <h2>👋 Ciao {character}!</h2>
         <p className="modal-subtitle">
@@ -430,9 +420,6 @@ function EmailModal({ character, orderType, onSubmit }) {
 function SeatsFullModal({ onClose }) {
   return (
     <div className="seats-full-overlay">
-      <video className="video-background" autoPlay loop muted playsInline>
-        <source src="/Sfondo1.mp4" type="video/mp4" />
-      </video>
       <div className="seats-full-modal">
         <h2>😢 Posti Esauriti</h2>
         <p>Siamo al completo! Puoi comunque fare un ordine immediato.</p>

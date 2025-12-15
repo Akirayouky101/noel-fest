@@ -17,6 +17,19 @@
   height: 100%;
   object-fit: cover;
   z-index: -1;
+  display: none; /* Disabilitato - file mancante */
+}
+
+/* Sfondo colorato alternativo */
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a0a 100%);
+  background-size: 400% 400%;
+  animation: backgroundShift 15s ease infinite;
+}
+
+@keyframes backgroundShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* ========================================

@@ -225,12 +225,31 @@ export async function getActiveReservations() {
   return data
 }
 
-export async function createReservation(characterName, numPeople) {
-  const { error } = await supabase
-    .from('active_reservations')
-    .insert([{ character_name: characterName, num_people: numPeople }])
-  
-  if (error) throw error
+export async function createReservation(characterName, email, numPeople, sessionData) {
+  try {
+    console.log('📝 Creating reservation:', { characterName, email, numPeople, sessionData })
+    
+    const { error } = await supabase
+      .from('active_reservations')
+      .insert([{ 
+        character_name: characterName,
+        email: email, 
+        num_people: numPeople,
+        session_type: sessionData?.sessionType || null,
+        session_date: sessionData?.sessionDate || null,
+        session_time: sessionData?.sessionTime || null
+      }])
+    
+    if (error) {
+      console.error('❌ Reservation error:', error)
+      throw error
+    }
+    
+    console.log('✅ Reservation created successfully')
+  } catch (error) {
+    console.error('Error in createReservation:', error)
+    throw error
+  }
 }
 
 export async function deleteReservation(characterName) {
