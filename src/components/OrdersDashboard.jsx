@@ -47,13 +47,15 @@ export default function OrdersDashboard() {
     loadAvailableSeats()
     loadActiveReservations()
     loadWalkinSeats()
-    // Polling ogni 5 secondi
+    
+    // Polling ridotto: ogni 30 secondi invece di 5
     const interval = setInterval(() => {
       loadOrders()
       loadAvailableSeats()
       loadActiveReservations()
       loadWalkinSeats()
-    }, 5000)
+    }, 30000) // 30 secondi
+    
     return () => clearInterval(interval)
   }, [])
 
