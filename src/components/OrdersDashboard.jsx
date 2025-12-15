@@ -48,15 +48,38 @@ export default function OrdersDashboard() {
     loadActiveReservations()
     loadWalkinSeats()
     
-    // Polling ridotto: ogni 30 secondi invece di 5
+    // Real-time subscription per auto-aggiornamento
+    const channel = supabase
+      .channel('orders-dashboard-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('🔔 Real-time update in OrdersDashboard:', payload.eventType)
+          // Ricarica ordini quando cambia qualcosa
+          loadOrders()
+          loadAvailableSeats()
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 OrdersDashboard subscription:', status)
+      })
+    
+    // Polling ridotto come backup: ogni 2 minuti
     const interval = setInterval(() => {
-      loadOrders()
       loadAvailableSeats()
       loadActiveReservations()
       loadWalkinSeats()
-    }, 30000) // 30 secondi
+    }, 120000) // 2 minuti solo per posti/prenotazioni
     
-    return () => clearInterval(interval)
+    return () => {
+      channel.unsubscribe()
+      clearInterval(interval)
+    }
   }, [])
 
   // Close dropdown when clicking outside
@@ -811,7 +834,7 @@ export default function OrdersDashboard() {
         ) : (
           <div className="orders-grid">
           {(() => {
-            // Raggruppa gli ordini per personaggio per la visualizzazione
+            // Raggruppa gli ordini per personaggio E arrival_group_id per evitare duplicati
             const characterMap = new Map()
             orders
               .filter(order => {
@@ -826,17 +849,25 @@ export default function OrdersDashboard() {
                 return isCorrectView && matchesStatus
               })
               .forEach(order => {
-                if (!characterMap.has(order.character)) {
-                  characterMap.set(order.character, [])
+                // Crea chiave unica: character + arrival_group_id
+                const arrivalId = order.arrival_group_id || 'default'
+                const key = `${order.character}__${arrivalId}`
+                
+                if (!characterMap.has(key)) {
+                  characterMap.set(key, {
+                    character: order.character,
+                    arrivalId: arrivalId,
+                    orders: []
+                  })
                 }
-                characterMap.get(order.character).push(order)
+                characterMap.get(key).orders.push(order)
               })
             
-            return Array.from(characterMap.entries()).map(([character, arrivals]) => (
+            return Array.from(characterMap.entries()).map(([key, group]) => (
               <CharacterArrivalCard
-                key={character}
-                character={character}
-                arrivals={arrivals}
+                key={key}
+                character={group.character}
+                arrivals={group.orders}
                 viewMode={viewMode}
                 isReservationUnlocked={isReservationUnlocked}
                 getSessionBadge={getSessionBadge}
