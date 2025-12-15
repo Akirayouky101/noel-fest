@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
-import Menu from './pages/Menu'
+import MenuNew from './pages/MenuNew'
 import AdminKanban from './pages/AdminKanban'
 import Login from './components/Login'
 import './App.css'
@@ -46,7 +46,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Menu />} />
+        <Route path="/" element={<MenuNew />} />
         <Route 
           path="/admin" 
           element={

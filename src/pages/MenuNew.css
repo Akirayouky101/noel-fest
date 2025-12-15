@@ -1,0 +1,718 @@
+/* ========================================
+   MENU REDESIGN - SIDEBAR LAYOUT
+   ======================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Video Background */
+.video-background {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* ========================================
+   LAYOUT PRINCIPALE
+   ======================================== */
+
+.menu-layout {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "seats seats"
+    "sidebar content";
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto auto 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.menu-header {
+  grid-area: header;
+  background: linear-gradient(135deg, #8B0000, #CD5C5C);
+  background-size: 200% 200%;
+  animation: gradientShift 10s ease infinite;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #8B0000;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFD700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.cart-button {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #FFD700;
+  background: rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cart-button:hover {
+  transform: scale(1.1);
+  background: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+}
+
+.cart-icon {
+  font-size: 1.5rem;
+}
+
+.cart-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff3b30;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ========================================
+   SEATS BAR
+   ======================================== */
+
+.seats-bar {
+  grid-area: seats;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #FFD700;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.seats-bar strong {
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   SIDEBAR CATEGORIE (Desktop)
+   ======================================== */
+
+.categories-sidebar {
+  grid-area: sidebar;
+  background: rgba(139, 0, 0, 0.95);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+  border-right: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.categories-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 4px;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.category-btn:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #FFD700;
+  transform: translateX(4px);
+}
+
+.category-btn.active {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+  border-color: #FFD700;
+  color: #FFD700;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.cat-icon {
+  font-size: 1.5rem;
+}
+
+.cat-name {
+  flex: 1;
+}
+
+/* ========================================
+   BOTTOM NAVIGATION (Mobile)
+   ======================================== */
+
+.bottom-nav {
+  display: none; /* Mostrato solo su mobile */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(139, 0, 0, 0.98);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-top: 2px solid rgba(255, 215, 0, 0.3);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  z-index: 90;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.bottom-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-nav-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 70px;
+}
+
+.bottom-nav-btn:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: #FFD700;
+}
+
+.bottom-nav-btn.active {
+  background: rgba(255, 215, 0, 0.2);
+  color: #FFD700;
+}
+
+.nav-icon {
+  font-size: 1.5rem;
+}
+
+.nav-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ========================================
+   MAIN CONTENT - SCROLL CONTINUO
+   ======================================== */
+
+.menu-content {
+  grid-area: content;
+  overflow-y: auto;
+  padding: 20px;
+  scroll-behavior: smooth;
+}
+
+.menu-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 4px;
+}
+
+.menu-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.7);
+}
+
+/* ========================================
+   SEZIONI CATEGORIE
+   ======================================== */
+
+.category-section {
+  margin-bottom: 40px;
+  animation: sectionFadeIn 0.5s ease-out;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid rgba(255, 215, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.title-icon {
+  font-size: 2rem;
+}
+
+/* ========================================
+   GRIGLIA ITEMS
+   ======================================== */
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ========================================
+   FAB CARRELLO (Mobile)
+   ======================================== */
+
+.fab-cart {
+  display: none; /* Mostrato solo su mobile */
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: linear-gradient(135deg, #8B0000, #CD5C5C);
+  color: white;
+  border: 2px solid #FFD700;
+  border-radius: 50px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 85;
+}
+
+.fab-cart:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(139, 0, 0, 0.7);
+}
+
+.fab-icon {
+  font-size: 1.5rem;
+}
+
+.fab-count {
+  background: #FFD700;
+  color: #8B0000;
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.fab-total {
+  font-size: 1rem;
+}
+
+/* ========================================
+   SUCCESS TOAST
+   ======================================== */
+
+.success-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 16px 32px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.5);
+  z-index: 200;
+  animation: toastSlideDown 0.4s ease-out;
+}
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ========================================
+   MODALS (Welcome, Email, SeatsFulll)
+   ======================================== */
+
+.welcome-modal-overlay,
+.email-modal-overlay,
+.seats-full-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.welcome-modal,
+.email-modal,
+.seats-full-modal {
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.98), rgba(205, 92, 92, 0.98));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 2px solid #FFD700;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.welcome-header h1 {
+  font-size: 2rem;
+  color: #FFD700;
+  margin-bottom: 8px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}
+
+.seats-info {
+  text-align: center;
+  font-size: 1.2rem;
+  color: white;
+  margin: 20px 0;
+  padding: 12px;
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+}
+
+.welcome-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.welcome-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 2px solid #FFD700;
+  border-radius: 16px;
+  background: rgba(255, 215, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.welcome-btn:hover {
+  background: rgba(255, 215, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+}
+
+.welcome-btn.primary {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.btn-icon {
+  font-size: 2.5rem;
+}
+
+.btn-content h3 {
+  color: #FFD700;
+  font-size: 1.3rem;
+  margin: 0 0 4px 0;
+}
+
+.btn-content p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Email Modal */
+.email-modal h2 {
+  font-size: 1.8rem;
+  color: #FFD700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.modal-subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: #FFD700;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #FFD700;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #8B0000;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
+}
+
+/* Seats Full Modal */
+.seats-full-modal h2 {
+  font-size: 1.8rem;
+  color: #FFD700;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.seats-full-modal p {
+  text-align: center;
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}
+
+.close-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 700;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .menu-layout {
+    grid-template-areas:
+      "header"
+      "seats"
+      "content";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    padding-bottom: 70px; /* Spazio per bottom nav */
+  }
+
+  .categories-sidebar {
+    display: none;
+  }
+
+  .bottom-nav {
+    display: flex;
+  }
+
+  .fab-cart {
+    display: flex;
+  }
+
+  .menu-content {
+    padding: 16px;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .category-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-modal,
+  .email-modal,
+  .seats-full-modal {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand {
+    font-size: 1.2rem;
+  }
+
+  .user-name {
+    font-size: 0.8rem;
+  }
+
+  .category-title {
+    font-size: 1.3rem;
+  }
+}
