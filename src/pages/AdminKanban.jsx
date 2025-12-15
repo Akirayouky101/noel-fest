@@ -1,29 +1,29 @@
 import { useState, useEffect, useRef } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
-  Volume2, VolumeX, Edit, Trash2, Info, Search,
-  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut, Settings,
-  ChevronDown, AlertTriangle, Armchair
+  Volume2, VolumeX, Trash2, Search,
+  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut,
+  ChevronDown, AlertTriangle, Armchair, CalendarDays
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
   getAllOrders, 
-  updateMultipleOrdersStatus,
+  updateOrderStatus,
   deleteMultipleOrders 
 } from '../lib/supabaseAPI'
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import SeatsManager from '../components/SeatsManager'
 import OrderDetailsModal from '../components/OrderDetailsModal'
-import './Admin-Kanban.css'
+import './Admin-Kanban-Professional.css'
 
 export default function AdminKanban({ user, onLogout }) {
   const [orders, setOrders] = useState([])
   const [filteredOrders, setFilteredOrders] = useState([])
+  const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [audioEnabled, setAudioEnabled] = useState(true)
-  const [activeTab, setActiveTab] = useState('kanban') // 'kanban' or 'analytics'
+  const [activeTab, setActiveTab] = useState('kanban') // 'kanban', 'analytics', 'reservations'
   const [showSeatsManager, setShowSeatsManager] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
@@ -47,6 +47,7 @@ export default function AdminKanban({ user, onLogout }) {
   // Load orders on mount
   useEffect(() => {
     loadOrders()
+    loadReservations()
     const cleanup = setupRealtimeSubscription()
     
     // Request notification permission
@@ -131,6 +132,21 @@ export default function AdminKanban({ user, onLogout }) {
       toast.error('Errore nel caricamento degli ordini')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Load reservations from Supabase
+  const loadReservations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('active_reservations')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setReservations(data || [])
+    } catch (error) {
+      console.error('Errore caricamento prenotazioni:', error)
     }
   }
 
@@ -277,18 +293,8 @@ export default function AdminKanban({ user, onLogout }) {
     })
   }
 
-  // Handle drag end
-  const onDragEnd = async (result) => {
-    if (!result.destination) return
-
-    const { source, destination, draggableId } = result
-    
-    // No movement
-    if (source.droppableId === destination.droppableId) return
-
-    const orderId = parseInt(draggableId.replace('order-', ''))
-    const newStatus = destination.droppableId
-
+  // Handle status change
+  const handleStatusChange = async (orderId, newStatus) => {
     try {
       // Optimistic update
       setOrders(prev =>
@@ -298,15 +304,14 @@ export default function AdminKanban({ user, onLogout }) {
       )
 
       // Update in database
-      await updateMultipleOrdersStatus([orderId], newStatus)
+      await updateOrderStatus(orderId, newStatus)
       
-      toast.success(`Ordine spostato in ${getStatusLabel(newStatus)}`, {
-        icon: getStatusIcon(newStatus)
-      })
+      toast.success(`✅ Stato aggiornato: ${getStatusLabel(newStatus)}`)
     } catch (error) {
-      console.error('Errore aggiornamento status:', error)
+      console.error('Errore aggiornamento stato:', error)
       toast.error('Errore nell\'aggiornamento dello stato')
-      // Revert on error
+      
+      // Revert optimistic update
       loadOrders()
     }
   }
@@ -531,6 +536,13 @@ export default function AdminKanban({ user, onLogout }) {
               <span>Kanban Board</span>
             </button>
             <button
+              className={`tab-btn ${activeTab === 'reservations' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reservations')}
+            >
+              <CalendarDays size={18} />
+              <span>Prenotazioni</span>
+            </button>
+            <button
               className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
               onClick={() => setActiveTab('analytics')}
             >
@@ -676,40 +688,44 @@ export default function AdminKanban({ user, onLogout }) {
 
         {/* Content Rendering */}
         {activeTab === 'kanban' ? (
-          /* Kanban Board */
-          <DragDropContext onDragEnd={onDragEnd}>
-            <div className="kanban-board">
-              {/* Colonna Pending */}
-              <KanbanColumn
-                status="pending"
-                title="In Attesa"
-                icon="⏳"
-                orders={getOrdersByStatus('pending')}
-                onDelete={handleDeleteOrder}
-                onCardClick={handleCardClick}
-              />
+          /* Kanban Board - SENZA DRAG AND DROP */
+          <div className="kanban-board">
+            {/* Colonna Pending */}
+            <KanbanColumn
+              status="pending"
+              title="In Attesa"
+              icon="⏳"
+              orders={getOrdersByStatus('pending')}
+              onDelete={handleDeleteOrder}
+              onCardClick={handleCardClick}
+              onStatusChange={handleStatusChange}
+            />
 
-              {/* Colonna Preparing */}
-              <KanbanColumn
-                status="preparing"
-                title="In Preparazione"
-                icon="👨‍🍳"
-                orders={getOrdersByStatus('preparing')}
-                onDelete={handleDeleteOrder}
-                onCardClick={handleCardClick}
-              />
+            {/* Colonna Preparing */}
+            <KanbanColumn
+              status="preparing"
+              title="In Preparazione"
+              icon="👨‍🍳"
+              orders={getOrdersByStatus('preparing')}
+              onDelete={handleDeleteOrder}
+              onCardClick={handleCardClick}
+              onStatusChange={handleStatusChange}
+            />
 
-              {/* Colonna Completed */}
-              <KanbanColumn
-                status="completed"
-                title="Completati"
-                icon="✅"
-                orders={getOrdersByStatus('completed')}
-                onDelete={handleDeleteOrder}
-                onCardClick={handleCardClick}
-              />
-            </div>
-          </DragDropContext>
+            {/* Colonna Completed */}
+            <KanbanColumn
+              status="completed"
+              title="Completati"
+              icon="✅"
+              orders={getOrdersByStatus('completed')}
+              onDelete={handleDeleteOrder}
+              onCardClick={handleCardClick}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+        ) : activeTab === 'reservations' ? (
+          /* Reservations View */
+          <ReservationsView reservations={reservations} onRefresh={loadReservations} />
         ) : (
           /* Analytics Dashboard */
           <AnalyticsDashboard orders={filteredOrders} />
@@ -734,8 +750,8 @@ export default function AdminKanban({ user, onLogout }) {
   )
 }
 
-// Kanban Column Component
-function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick }) {
+// Kanban Column Component - SENZA DRAG AND DROP
+function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick, onStatusChange }) {
   return (
     <div className={`kanban-column ${status}`}>
       <div className="column-header">
@@ -746,93 +762,119 @@ function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick }) {
         <span className="column-count">{orders.length}</span>
       </div>
 
-      <Droppable droppableId={status}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`column-content ${snapshot.isDraggingOver ? 'drag-over' : ''}`}
-          >
-            {orders.length === 0 ? (
-              <div className="column-empty">
-                <span className="icon">{icon}</span>
-                <p>Nessun ordine</p>
-              </div>
-            ) : (
-              orders.map((order, index) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  index={index}
-                  onDelete={onDelete}
-                  onClick={onCardClick}
-                />
-              ))
-            )}
-            {provided.placeholder}
+      <div className="column-content">
+        {orders.length === 0 ? (
+          <div className="column-empty">
+            <span className="icon">{icon}</span>
+            <p>Nessun ordine</p>
           </div>
+        ) : (
+          orders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onDelete={onDelete}
+              onClick={onCardClick}
+              onStatusChange={onStatusChange}
+            />
+          ))
         )}
-      </Droppable>
+      </div>
     </div>
   )
 }
 
-// Order Card Component - COMPATTO
-function OrderCard({ order, index, onDelete, onClick }) {
+// Order Card Component - CON MENU STATUS
+function OrderCard({ order, onDelete, onClick, onStatusChange }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
 
   const handleDelete = () => {
     setShowDeleteModal(false)
     onDelete(order.id)
   }
 
+  const handleStatusChange = (newStatus) => {
+    setShowStatusMenu(false)
+    onStatusChange(order.id, newStatus)
+  }
+
   return (
     <>
-      <Draggable draggableId={`order-${order.id}`} index={index}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            className={`order-card ${snapshot.isDragging ? 'dragging' : ''}`}
-            onClick={(e) => {
-              if (!e.target.closest('.card-action-btn')) {
-                onClick(order)
-              }
-            }}
-          >
-            <div className="card-header">
-              <div className="card-character">
-                🎅 {order.characterName}
-              </div>
-              <div className="card-actions">
-                <button
-                  className="card-action-btn delete"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowDeleteModal(true)
-                  }}
-                  title="Elimina ordine"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
+      <div
+        className="order-card"
+        onClick={(e) => {
+          if (!e.target.closest('.card-action-btn') && !e.target.closest('.status-menu')) {
+            onClick(order)
+          }
+        }}
+      >
+        <div className="card-header">
+          <div className="card-character">
+            🎅 {order.characterName}
+          </div>
+          <div className="card-actions">
+            <button
+              className="card-action-btn status-change"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowStatusMenu(!showStatusMenu)
+              }}
+              title="Cambia stato"
+            >
+              <ChevronDown size={16} />
+            </button>
+            <button
+              className="card-action-btn delete"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteModal(true)
+              }}
+              title="Elimina ordine"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
 
-            <div className="card-quick-info">
-              <span className="quick-total">€{order.total.toFixed(2)}</span>
-              <span className="quick-items">{order.items.length} art.</span>
-              <span className="quick-people">{order.numPeople} pers.</span>
-              
-              {(order.sessionType === 'lunch' || order.sessionType === 'dinner') && (
-                <span className="reservation-badge" title="Ha una prenotazione">
-                  📅
-                </span>
-              )}
-            </div>
+        {showStatusMenu && (
+          <div className="status-menu">
+            <button
+              className="status-option pending"
+              onClick={() => handleStatusChange('pending')}
+              disabled={order.status === 'pending'}
+            >
+              ⏳ In Attesa
+            </button>
+            <button
+              className="status-option preparing"
+              onClick={() => handleStatusChange('preparing')}
+              disabled={order.status === 'preparing'}
+            >
+              👨‍🍳 In Preparazione
+            </button>
+            <button
+              className="status-option completed"
+              onClick={() => handleStatusChange('completed')}
+              disabled={order.status === 'completed'}
+            >
+              ✅ Completato
+            </button>
           </div>
         )}
-      </Draggable>
+
+        <div className="card-quick-info">
+          <span className="quick-total">€{order.total.toFixed(2)}</span>
+          <span className="quick-items">{order.items.length} art.</span>
+          <span className="quick-people">{order.numPeople} pers.</span>
+          
+          {(order.sessionType === 'lunch' || order.sessionType === 'dinner') && (
+            <span className="reservation-badge" title="Ha una prenotazione">
+              📅
+            </span>
+          )}
+        </div>
+      </div>
 
       {showDeleteModal && (
         <div className="delete-modal-overlay" onClick={() => setShowDeleteModal(false)}>
@@ -843,7 +885,7 @@ function OrderCard({ order, index, onDelete, onClick }) {
             </div>
             
             <div className="delete-modal-body">
-              <p className="warning-text">Stai per eliminare l ordine di:</p>
+              <p className="warning-text">Stai per eliminare l'ordine di:</p>
               <div className="delete-order-info">
                 <div className="delete-character">🎅 {order.characterName}</div>
                 <div className="delete-details">
@@ -874,5 +916,60 @@ function OrderCard({ order, index, onDelete, onClick }) {
         </div>
       )}
     </>
+  )
+}
+
+// Reservations View Component
+function ReservationsView({ reservations, onRefresh }) {
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <div className="reservations-view">
+      <div className="reservations-header">
+        <h2>
+          <CalendarDays size={24} />
+          Prenotazioni Attive
+        </h2>
+        <button className="refresh-btn-small" onClick={onRefresh}>
+          <RefreshCw size={18} />
+          Aggiorna
+        </button>
+      </div>
+
+      {reservations.length === 0 ? (
+        <div className="empty-reservations">
+          <CalendarDays size={64} />
+          <p>Nessuna prenotazione attiva</p>
+        </div>
+      ) : (
+        <div className="reservations-grid">
+          {reservations.map((reservation) => (
+            <div key={reservation.id} className="reservation-card">
+              <div className="reservation-character">
+                🎅 {reservation.character_name}
+              </div>
+              <div className="reservation-details">
+                <div className="reservation-info">
+                  <Users size={18} />
+                  <span>{reservation.num_people} {reservation.num_people === 1 ? 'persona' : 'persone'}</span>
+                </div>
+                <div className="reservation-info">
+                  <Clock size={18} />
+                  <span>{formatDate(reservation.created_at)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
