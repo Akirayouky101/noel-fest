@@ -4,7 +4,8 @@ import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Edit, Trash2, Info, Search,
-  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut, Settings
+  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut, Settings,
+  ChevronDown, AlertTriangle, Armchair
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -132,8 +133,15 @@ export default function AdminKanban({ user, onLogout }) {
 
   // Setup real-time subscription
   const setupRealtimeSubscription = () => {
+    console.log('📡 Setting up real-time subscription...')
+    
     const channel = supabase
-      .channel('orders-changes')
+      .channel('orders-changes-v2', {
+        config: {
+          broadcast: { self: true },
+          presence: { key: 'admin' }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -142,12 +150,21 @@ export default function AdminKanban({ user, onLogout }) {
           table: 'orders'
         },
         (payload) => {
-          console.log('Real-time update:', payload)
+          console.log('🔥 Real-time update received:', payload.eventType, payload)
           
           if (payload.eventType === 'INSERT') {
             // New order
             const newOrder = transformOrder(payload.new)
-            setOrders(prev => [newOrder, ...prev])
+            console.log('✅ Adding new order to state:', newOrder.characterName)
+            
+            setOrders(prev => {
+              // Check if already exists (prevent duplicates)
+              if (prev.some(o => o.id === newOrder.id)) {
+                console.log('⚠️ Order already exists, skipping')
+                return prev
+              }
+              return [newOrder, ...prev]
+            })
             
             toast.success(`🎄 Nuovo ordine da ${newOrder.characterName}!`, {
               duration: 5000,
@@ -172,21 +189,53 @@ export default function AdminKanban({ user, onLogout }) {
           } else if (payload.eventType === 'UPDATE') {
             // Order updated
             const updatedOrder = transformOrder(payload.new)
-            setOrders(prev => 
-              prev.map(order => order.id === updatedOrder.id ? updatedOrder : order)
-            )
+            console.log('♻️ Updating order in state:', updatedOrder.characterName)
+            
+            setOrders(prev => {
+              const updated = prev.map(order => 
+                order.id === updatedOrder.id ? updatedOrder : order
+              )
+              return updated
+            })
+            
+            toast(`📝 Ordine ${updatedOrder.characterName} aggiornato`, {
+              icon: '♻️'
+            })
           } else if (payload.eventType === 'DELETE') {
             // Order deleted
+            console.log('🗑️ Removing order from state:', payload.old.id)
+            
             setOrders(prev => prev.filter(order => order.id !== payload.old.id))
-            toast.success('Ordine eliminato')
+            
+            toast('🗑️ Ordine eliminato', {
+              icon: '✅'
+            })
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status)
+        
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Real-time subscription ACTIVE')
+          toast.success('🔴 LIVE - Aggiornamenti automatici attivi', {
+            duration: 3000,
+            icon: '📡'
+          })
+        } else if (status === 'CLOSED') {
+          console.warn('⚠️ Real-time subscription CLOSED')
+          toast.error('Real-time disconnesso - Ricarica la pagina', {
+            duration: 5000
+          })
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Real-time subscription ERROR')
+          toast.error('Errore real-time - Verifica connessione', {
+            duration: 5000
+          })
+        }
+      })
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return channel
   }
 
   // Transform order from Supabase format
@@ -304,17 +353,33 @@ export default function AdminKanban({ user, onLogout }) {
     toast.success('Filtri azzerati')
   }
 
-  // Delete order
+  // Delete order (now handled by modal in OrderCard)
   const handleDeleteOrder = async (orderId) => {
-    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return
-
     try {
-      await deleteMultipleOrders([orderId])
+      console.log('🗑️ Deleting order:', orderId)
+      
+      const result = await deleteMultipleOrders([orderId])
+      
+      // Update local state
       setOrders(prev => prev.filter(order => order.id !== orderId))
-      toast.success('Ordine eliminato')
+      
+      // Show success with freed seats info
+      if (result && result.freedSeats > 0) {
+        toast.success(`✅ Ordine eliminato e ${result.freedSeats} posti liberati`, {
+          duration: 4000,
+          icon: '🎉'
+        })
+      } else {
+        toast.success('✅ Ordine eliminato', {
+          icon: '🗑️'
+        })
+      }
+      
     } catch (error) {
       console.error('Errore eliminazione:', error)
-      toast.error('Errore nell\'eliminazione')
+      toast.error('❌ Errore nell\'eliminazione dell\'ordine', {
+        duration: 5000
+      })
     }
   }
 
@@ -683,6 +748,9 @@ function KanbanColumn({ status, title, icon, orders, onDelete }) {
 
 // Order Card Component
 function OrderCard({ order, index, onDelete }) {
+  const [expanded, setExpanded] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleString('it-IT', {
       day: '2-digit',
@@ -693,79 +761,153 @@ function OrderCard({ order, index, onDelete }) {
     })
   }
 
+  const handleDelete = () => {
+    setShowDeleteModal(false)
+    onDelete(order.id)
+  }
+
   return (
-    <Draggable draggableId={`order-${order.id}`} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          className={`order-card ${snapshot.isDragging ? 'dragging' : ''}`}
-        >
-          {/* Header */}
-          <div className="card-header">
-            <div className="card-character">
-              🎭 {order.characterName}
+    <>
+      <Draggable draggableId={`order-${order.id}`} index={index}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            className={`order-card ${snapshot.isDragging ? 'dragging' : ''} ${expanded ? 'expanded' : ''}`}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {/* Header */}
+            <div className="card-header">
+              <div className="card-character">
+                � {order.characterName}
+              </div>
+              <div className="card-actions">
+                <button
+                  className="card-action-btn delete"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowDeleteModal(true)
+                  }}
+                  title="Elimina ordine"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
-            <div className="card-actions">
-              <button
-                className="card-action-btn delete"
-                onClick={() => onDelete(order.id)}
-                title="Elimina ordine"
+
+            {/* Quick Info - Always visible */}
+            <div className="card-quick-info">
+              <span className="quick-total">€{order.total.toFixed(2)}</span>
+              <span className="quick-items">{order.items.length} articoli</span>
+              <span className="quick-people">{order.numPeople} pers.</span>
+              
+              {/* Reservation indicator */}
+              {(order.sessionType === 'lunch' || order.sessionType === 'dinner') && (
+                <span className="reservation-badge" title="Ha una prenotazione">
+                  📅 Prenotato
+                </span>
+              )}
+            </div>
+
+            {/* Expanded Details */}
+            {expanded && (
+              <div className="card-details">
+                {/* Info */}
+                <div className="card-info">
+                  <div className="card-info-row">
+                    <Clock size={16} className="icon" />
+                    <span>{formatDate(order.timestamp)}</span>
+                  </div>
+                  
+                  <div className="card-info-row">
+                    <Users size={16} className="icon" />
+                    <span>{order.numPeople} {order.numPeople === 1 ? 'persona' : 'persone'}</span>
+                  </div>
+
+                  {order.sessionType !== 'immediate' && (
+                    <div className="card-info-row">
+                      <span className="session-badge">
+                        {order.sessionType === 'lunch' ? '🌞 Pranzo' : '🌙 Cena'}
+                        {order.sessionDate && ` - ${order.sessionDate} ${order.sessionTime || ''}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items */}
+                <div className="card-items">
+                  <div className="card-items-title">Articoli:</div>
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="card-item">
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-quantity">x{item.quantity}</span>
+                      <span className="item-price">€{(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Notes */}
+                {order.notes && (
+                  <div className="card-note">
+                    💬 {order.notes}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Expand Indicator */}
+            <div className="card-expand-indicator">
+              <ChevronDown 
+                size={20} 
+                className={`expand-icon ${expanded ? 'expanded' : ''}`}
+              />
+              <span className="expand-text">{expanded ? 'Clicca per chiudere' : 'Clicca per dettagli'}</span>
+            </div>
+          </div>
+        )}
+      </Draggable>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <AlertTriangle size={48} className="warning-icon" />
+              <h2>Conferma Eliminazione</h2>
+            </div>
+            
+            <div className="delete-modal-body">
+              <p className="warning-text">Stai per eliminare l'ordine di:</p>
+              <div className="delete-order-info">
+                <div className="delete-character">🎅 {order.characterName}</div>
+                <div className="delete-details">
+                  <span>Totale: €{order.total.toFixed(2)}</span>
+                  <span>{order.items.length} articoli</span>
+                  <span>{order.numPeople} persone</span>
+                </div>
+              </div>
+              <p className="warning-note">⚠️ Questa azione non può essere annullata!</p>
+            </div>
+
+            <div className="delete-modal-footer">
+              <button 
+                className="modal-btn cancel"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Annulla
+              </button>
+              <button 
+                className="modal-btn confirm"
+                onClick={handleDelete}
               >
                 <Trash2 size={16} />
+                Elimina Ordine
               </button>
             </div>
           </div>
-
-          {/* Info */}
-          <div className="card-info">
-            <div className="card-info-row">
-              <Clock size={16} className="icon" />
-              <span>{formatDate(order.timestamp)}</span>
-            </div>
-            
-            <div className="card-info-row">
-              <Users size={16} className="icon" />
-              <span>{order.numPeople} {order.numPeople === 1 ? 'persona' : 'persone'}</span>
-            </div>
-
-            {order.sessionType !== 'immediate' && (
-              <div className="card-info-row">
-                <span className="session-badge">
-                  {order.sessionType === 'lunch' ? '🌞 Pranzo' : '🌙 Cena'}
-                  {order.sessionDate && ` - ${order.sessionDate} ${order.sessionTime || ''}`}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Items */}
-          <div className="card-items">
-            <div className="card-items-title">Articoli:</div>
-            {order.items.map((item, idx) => (
-              <div key={idx} className="card-item">
-                <span className="item-name">{item.name}</span>
-                <span className="item-quantity">x{item.quantity}</span>
-                <span className="item-price">€{(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Total */}
-          <div className="card-total">
-            <span className="total-label">Totale:</span>
-            <span className="total-value">€{order.total.toFixed(2)}</span>
-          </div>
-
-          {/* Notes */}
-          {order.notes && (
-            <div className="card-note">
-              💬 {order.notes}
-            </div>
-          )}
         </div>
       )}
-    </Draggable>
+    </>
   )
 }

@@ -68,12 +68,60 @@ export async function updateOrderStatus(orderId, newStatus) {
 }
 
 export async function deleteOrder(orderId) {
-  const { error } = await supabase
-    .from('orders')
-    .delete()
-    .eq('id', orderId)
-  
-  if (error) throw error
+  // Prima di eliminare l'ordine, elimina le prenotazioni e i posti walk-in associati
+  try {
+    // 1. Get order info to know character name
+    const { data: order, error: fetchError } = await supabase
+      .from('orders')
+      .select('character_name, num_people')
+      .eq('id', orderId)
+      .single()
+    
+    if (fetchError) throw fetchError
+    
+    if (order && order.character_name) {
+      console.log(`🧹 Cleaning up seats for: ${order.character_name}`)
+      
+      // 2. Delete from active_reservations
+      const { error: resError } = await supabase
+        .from('active_reservations')
+        .delete()
+        .eq('character_name', order.character_name)
+      
+      if (resError) {
+        console.warn('Warning deleting reservation:', resError)
+      } else {
+        console.log(`✅ Deleted reservation for ${order.character_name}`)
+      }
+      
+      // 3. Delete from walkin_seats
+      const { error: walkinError } = await supabase
+        .from('walkin_seats')
+        .delete()
+        .eq('character_name', order.character_name)
+      
+      if (walkinError) {
+        console.warn('Warning deleting walk-in:', walkinError)
+      } else {
+        console.log(`✅ Deleted walk-in for ${order.character_name}`)
+      }
+    }
+    
+    // 4. Finally delete the order
+    const { error: deleteError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+    
+    if (deleteError) throw deleteError
+    
+    console.log(`✅ Order ${orderId} and associated seats deleted successfully`)
+    return { success: true, freedSeats: order?.num_people || 0 }
+    
+  } catch (error) {
+    console.error('Error in deleteOrder:', error)
+    throw error
+  }
 }
 
 export async function updateOrderPeople(orderId, numPeople) {
@@ -95,12 +143,57 @@ export async function updateMultipleOrdersStatus(orderIds, newStatus) {
 }
 
 export async function deleteMultipleOrders(orderIds) {
-  const { error } = await supabase
-    .from('orders')
-    .delete()
-    .in('id', orderIds)
-  
-  if (error) throw error
+  // Delete seats for each order before deleting the orders
+  try {
+    let totalFreedSeats = 0
+    
+    for (const orderId of orderIds) {
+      // 1. Get order info
+      const { data: order, error: fetchError } = await supabase
+        .from('orders')
+        .select('character_name, num_people')
+        .eq('id', orderId)
+        .single()
+      
+      if (fetchError) {
+        console.warn(`Warning fetching order ${orderId}:`, fetchError)
+        continue
+      }
+      
+      if (order && order.character_name) {
+        console.log(`🧹 Cleaning up seats for: ${order.character_name}`)
+        
+        // 2. Delete reservations
+        await supabase
+          .from('active_reservations')
+          .delete()
+          .eq('character_name', order.character_name)
+        
+        // 3. Delete walk-in
+        await supabase
+          .from('walkin_seats')
+          .delete()
+          .eq('character_name', order.character_name)
+        
+        totalFreedSeats += order.num_people || 0
+      }
+    }
+    
+    // 4. Finally delete all orders
+    const { error: deleteError } = await supabase
+      .from('orders')
+      .delete()
+      .in('id', orderIds)
+    
+    if (deleteError) throw deleteError
+    
+    console.log(`✅ ${orderIds.length} orders deleted, ${totalFreedSeats} seats freed`)
+    return { success: true, freedSeats: totalFreedSeats }
+    
+  } catch (error) {
+    console.error('Error in deleteMultipleOrders:', error)
+    throw error
+  }
 }
 
 // =============================================
