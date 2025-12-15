@@ -55,9 +55,16 @@ export default function AdminKanban({ user, onLogout }) {
       Notification.requestPermission()
     }
     
+    // Auto-refresh orders every hour to show scheduled orders at the right time
+    const refreshInterval = setInterval(() => {
+      console.log('⏰ Auto-refresh: ricarico ordini programmati')
+      loadOrders()
+    }, 60 * 60 * 1000) // Every hour
+    
     // Cleanup on unmount
     return () => {
       if (cleanup) cleanup()
+      clearInterval(refreshInterval)
     }
   }, [])
 
@@ -122,8 +129,21 @@ export default function AdminKanban({ user, onLogout }) {
       setLoading(true)
       const data = await getAllOrders()
       
-      // Filter out cancelled orders
-      const activeOrders = data.filter(order => order.status !== 'cancelled')
+      // Filter out cancelled orders and orders not yet ready to be shown
+      const activeOrders = data.filter(order => {
+        if (order.status === 'cancelled') return false
+        
+        // Ordini immediati sono sempre visibili
+        if (order.sessionType === 'immediate') return true
+        
+        // Ordini con prenotazione: controllare data e ora
+        if (order.sessionType === 'lunch' || order.sessionType === 'dinner') {
+          return shouldShowScheduledOrder(order)
+        }
+        
+        return true
+      })
+      
       setOrders(activeOrders)
       
       toast.success(`${activeOrders.length} ordini caricati`)
@@ -133,6 +153,46 @@ export default function AdminKanban({ user, onLogout }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Check if a scheduled order should be shown based on date and time
+  const shouldShowScheduledOrder = (order) => {
+    const now = new Date()
+    
+    // Se non ha data di sessione, mostralo sempre
+    if (!order.sessionDate) return true
+    
+    // Parse la data dell'ordine (formato: "YYYY-MM-DD")
+    const [year, month, day] = order.sessionDate.split('-').map(Number)
+    const orderDate = new Date(year, month - 1, day)
+    
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
+    
+    // Se l'ordine è per un giorno futuro, non mostrarlo
+    if (orderDay > today) return false
+    
+    // Se l'ordine è per oggi, controllare l'orario
+    if (orderDay.getTime() === today.getTime()) {
+      const currentHour = now.getHours()
+      const currentMinutes = now.getMinutes()
+      const currentTimeInMinutes = currentHour * 60 + currentMinutes
+      
+      if (order.sessionType === 'lunch') {
+        // Pranzo: mostrare dalle 11:00
+        const lunchStartTime = 11 * 60 // 11:00
+        return currentTimeInMinutes >= lunchStartTime
+      } else if (order.sessionType === 'dinner') {
+        // Cena: mostrare dalle 18:00
+        const dinnerStartTime = 18 * 60 // 18:00
+        return currentTimeInMinutes >= dinnerStartTime
+      }
+    }
+    
+    // Se l'ordine è per un giorno passato, mostralo (per storico)
+    if (orderDay < today) return true
+    
+    return true
   }
 
   // Load reservations from Supabase
@@ -175,6 +235,14 @@ export default function AdminKanban({ user, onLogout }) {
             // New order
             const newOrder = transformOrder(payload.new)
             console.log('✅ Adding new order to state:', newOrder.characterName)
+            
+            // Controllare se l'ordine deve essere mostrato
+            if (newOrder.status === 'cancelled') return
+            if ((newOrder.sessionType === 'lunch' || newOrder.sessionType === 'dinner') 
+                && !shouldShowScheduledOrder(newOrder)) {
+              console.log('⏰ Ordine programmato per dopo, non mostrato ora')
+              return
+            }
             
             setOrders(prev => {
               // Check if already exists (prevent duplicates)
@@ -291,6 +359,13 @@ export default function AdminKanban({ user, onLogout }) {
       total: filteredOrders.length,
       revenue
     })
+  }
+
+  // Count scheduled orders not yet shown
+  const getScheduledOrdersCount = () => {
+    // This would require querying all orders including future ones
+    // For now, we'll show a generic message
+    return 0
   }
 
   // Handle status change
@@ -500,7 +575,7 @@ export default function AdminKanban({ user, onLogout }) {
               <button 
                 className="refresh-btn"
                 onClick={loadOrders}
-                title="Ricarica ordini"
+                title="Ricarica ordini (gli ordini programmati appaiono all'orario giusto)"
               >
                 <RefreshCw size={20} />
                 <span>Aggiorna</span>
