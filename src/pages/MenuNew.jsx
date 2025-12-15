@@ -8,7 +8,7 @@ import { getAvailableSeats, createOrder, createReservation } from '../lib/supaba
 import './MenuNew.css'
 
 const categories = [
-  { id: 'antipasti', name: 'Antipasti', icon: '🍝' },
+  { id: 'antipasti', name: 'Antipasti', icon: '🥟' },
   { id: 'primi', name: 'Primi', icon: '🍝' },
   { id: 'secondi', name: 'Secondi', icon: '🍖' },
   { id: 'contorni', name: 'Contorni', icon: '🥗' },

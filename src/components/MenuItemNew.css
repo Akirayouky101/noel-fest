@@ -1,11 +1,12 @@
 /* ========================================
-   PRODUCT CARD - TEMA NATALIZIO
+   PRODUCT CARD - TEMA NATALIZIO ROSSO
    ======================================== */
 
 .product-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 250, 240, 0.95) 100%);
-  border: 3px solid transparent;
-  background-clip: padding-box;
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.95) 0%, rgba(165, 42, 42, 0.95) 100%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 3px solid #FFD700;
   border-radius: 16px;
   padding: 20px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -15,45 +16,41 @@
   height: 100%;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* Bordo dorato animato */
+/* Brillantini decorativi */
 .product-card::before {
-  content: '';
+  content: '✨';
   position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 3px;
-  background: linear-gradient(135deg, #FFD700, #FFA500, #FFD700, #FFA500);
-  background-size: 400% 400%;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: borderGlow 3s ease infinite;
+  top: 12px;
+  right: 12px;
+  font-size: 1.5rem;
+  opacity: 0.6;
+  animation: sparkleRotate 3s linear infinite;
   pointer-events: none;
 }
 
-@keyframes borderGlow {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes sparkleRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Fiocchi di neve decorativi */
+/* Fiocco di neve decorativo */
 .product-card::after {
   content: '❄️';
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 1.5rem;
-  opacity: 0.3;
-  animation: snowRotate 4s linear infinite;
+  bottom: 12px;
+  left: 12px;
+  font-size: 1.2rem;
+  opacity: 0.4;
+  animation: snowFloat 4s ease-in-out infinite;
   pointer-events: none;
 }
 
-@keyframes snowRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes snowFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(180deg); }
 }
 
 @keyframes cardSlideIn {
@@ -68,29 +65,11 @@
 }
 
 .product-card:hover {
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-8px) scale(1.03);
   box-shadow: 
-    0 12px 28px rgba(255, 215, 0, 0.4),
-    0 0 20px rgba(255, 215, 0, 0.3),
-    inset 0 0 30px rgba(255, 215, 0, 0.1);
-}
-
-/* Sparkle effect on hover */
-.product-card:hover::after {
-  content: '✨';
-  opacity: 1;
-  animation: sparkle 0.6s ease-out;
-}
-
-@keyframes sparkle {
-  0%, 100% { 
-    opacity: 0;
-    transform: scale(0) rotate(0deg);
-  }
-  50% { 
-    opacity: 1;
-    transform: scale(1.3) rotate(180deg);
-  }
+    0 12px 32px rgba(255, 215, 0, 0.5),
+    0 0 30px rgba(255, 215, 0, 0.3);
+  border-color: #FFA500;
 }
 
 /* ========================================
@@ -105,14 +84,14 @@
 }
 
 .product-name {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #8B0000;
+  color: #FFD700;
   margin: 0;
   line-height: 1.3;
-  text-shadow: 0 1px 2px rgba(139, 0, 0, 0.2);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   position: relative;
-  padding-left: 24px;
+  padding-left: 28px;
 }
 
 /* Icona natalizia prima del nome */
@@ -120,21 +99,28 @@
   content: '🎄';
   position: absolute;
   left: 0;
-  font-size: 1rem;
-  animation: treeShine 2s ease-in-out infinite;
+  font-size: 1.1rem;
+  animation: treeGlow 2s ease-in-out infinite;
 }
 
-@keyframes treeShine {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+@keyframes treeGlow {
+  0%, 100% { 
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 .product-description {
   font-size: 0.95rem;
-  color: #666;
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
   margin: 0;
   flex: 1;
+  margin-top: 8px;
 }
 
 /* ========================================
@@ -147,36 +133,21 @@
   align-items: center;
   gap: 12px;
   margin-top: auto;
-  padding-top: 12px;
-  border-top: 2px solid rgba(255, 215, 0, 0.3);
-  position: relative;
-}
-
-/* Decorazione campanella */
-.product-footer::before {
-  content: '🔔';
-  position: absolute;
-  left: -8px;
-  top: -10px;
-  font-size: 1rem;
-  animation: bellRing 2s ease-in-out infinite;
-}
-
-@keyframes bellRing {
-  0%, 90%, 100% { transform: rotate(0deg); }
-  92%, 96% { transform: rotate(-10deg); }
-  94%, 98% { transform: rotate(10deg); }
+  padding-top: 16px;
+  border-top: 2px solid rgba(255, 215, 0, 0.4);
 }
 
 .product-price {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #8B0000;
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: priceGlow 2s ease-in-out infinite;
+}
+
+@keyframes priceGlow {
+  0%, 100% { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
+  50% { text-shadow: 0 2px 8px rgba(255, 215, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.6); }
 }
 
 /* ========================================
@@ -186,19 +157,19 @@
 .add-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #8B0000, #CD5C5C);
-  color: white;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #8B0000;
   font-weight: 700;
-  font-size: 0.95rem;
-  border: 2px solid #FFD700;
+  font-size: 1rem;
+  border: none;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
 }
 
 .add-btn::before {
@@ -209,7 +180,7 @@
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.5);
   transform: translate(-50%, -50%);
   transition: width 0.6s, height 0.6s;
 }
@@ -220,49 +191,18 @@
 }
 
 .add-btn:hover {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-3px) scale(1.05);
   box-shadow: 
-    0 6px 16px rgba(139, 0, 0, 0.4),
-    0 0 20px rgba(255, 215, 0, 0.5);
-  border-color: #FFA500;
+    0 6px 20px rgba(255, 215, 0, 0.6),
+    0 0 30px rgba(255, 215, 0, 0.4);
 }
 
 .add-btn:active {
   transform: translateY(0) scale(0.98);
 }
 
-/* Decorazione stellina sul bottone */
-.add-btn::after {
-  content: '⭐';
-  position: absolute;
-  right: -8px;
-  top: -8px;
-  font-size: 1.2rem;
-  opacity: 0;
-  animation: starPop 0.6s ease-out;
-  pointer-events: none;
-}
-
-.add-btn:hover::after {
-  animation: starPop 0.6s ease-out infinite;
-}
-
-@keyframes starPop {
-  0% {
-    opacity: 0;
-    transform: scale(0) rotate(0deg);
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.5) rotate(180deg);
-  }
-}
-
 .btn-icon {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   position: relative;
   z-index: 1;
