@@ -15,6 +15,7 @@ import {
 } from '../lib/supabaseAPI'
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import SeatsManager from '../components/SeatsManager'
+import OrderDetailsModal from '../components/OrderDetailsModal'
 import './Admin-Kanban.css'
 
 export default function AdminKanban({ user, onLogout }) {
@@ -24,6 +25,8 @@ export default function AdminKanban({ user, onLogout }) {
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [activeTab, setActiveTab] = useState('kanban') // 'kanban' or 'analytics'
   const [showSeatsManager, setShowSeatsManager] = useState(false)
+  const [selectedCharacter, setSelectedCharacter] = useState(null)
+  const [selectedOrders, setSelectedOrders] = useState([])
   const audioRef = useRef(null)
   
   // Filtri
@@ -383,6 +386,21 @@ export default function AdminKanban({ user, onLogout }) {
     }
   }
 
+  // Handle card click - open modal with all orders from same character
+  const handleCardClick = (clickedOrder) => {
+    const characterOrders = orders.filter(
+      order => order.characterName === clickedOrder.characterName
+    )
+    setSelectedCharacter(clickedOrder.characterName)
+    setSelectedOrders(characterOrders)
+  }
+
+  // Close modal
+  const closeModal = () => {
+    setSelectedCharacter(null)
+    setSelectedOrders([])
+  }
+
   // Status helpers
   const getStatusLabel = (status) => {
     const labels = {
@@ -668,6 +686,7 @@ export default function AdminKanban({ user, onLogout }) {
                 icon="⏳"
                 orders={getOrdersByStatus('pending')}
                 onDelete={handleDeleteOrder}
+                onCardClick={handleCardClick}
               />
 
               {/* Colonna Preparing */}
@@ -677,6 +696,7 @@ export default function AdminKanban({ user, onLogout }) {
                 icon="👨‍🍳"
                 orders={getOrdersByStatus('preparing')}
                 onDelete={handleDeleteOrder}
+                onCardClick={handleCardClick}
               />
 
               {/* Colonna Completed */}
@@ -686,6 +706,7 @@ export default function AdminKanban({ user, onLogout }) {
                 icon="✅"
                 orders={getOrdersByStatus('completed')}
                 onDelete={handleDeleteOrder}
+                onCardClick={handleCardClick}
               />
             </div>
           </DragDropContext>
@@ -700,12 +721,21 @@ export default function AdminKanban({ user, onLogout }) {
         isOpen={showSeatsManager} 
         onClose={() => setShowSeatsManager(false)} 
       />
+
+      {/* Order Details Modal */}
+      {selectedCharacter && selectedOrders.length > 0 && (
+        <OrderDetailsModal
+          characterName={selectedCharacter}
+          orders={selectedOrders}
+          onClose={closeModal}
+        />
+      )}
     </div>
   )
 }
 
 // Kanban Column Component
-function KanbanColumn({ status, title, icon, orders, onDelete }) {
+function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick }) {
   return (
     <div className={`kanban-column ${status}`}>
       <div className="column-header">
@@ -735,6 +765,7 @@ function KanbanColumn({ status, title, icon, orders, onDelete }) {
                   order={order}
                   index={index}
                   onDelete={onDelete}
+                  onClick={onCardClick}
                 />
               ))
             )}
@@ -746,20 +777,9 @@ function KanbanColumn({ status, title, icon, orders, onDelete }) {
   )
 }
 
-// Order Card Component
-function OrderCard({ order, index, onDelete }) {
-  const [expanded, setExpanded] = useState(false)
+// Order Card Component - COMPATTO
+function OrderCard({ order, index, onDelete, onClick }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const handleDelete = () => {
     setShowDeleteModal(false)
@@ -774,13 +794,16 @@ function OrderCard({ order, index, onDelete }) {
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            className={`order-card ${snapshot.isDragging ? 'dragging' : ''} ${expanded ? 'expanded' : ''}`}
-            onClick={() => setExpanded(!expanded)}
+            className={`order-card ${snapshot.isDragging ? 'dragging' : ''}`}
+            onClick={(e) => {
+              if (!e.target.closest('.card-action-btn')) {
+                onClick(order)
+              }
+            }}
           >
-            {/* Header */}
             <div className="card-header">
               <div className="card-character">
-                � {order.characterName}
+                🎅 {order.characterName}
               </div>
               <div className="card-actions">
                 <button
@@ -796,79 +819,21 @@ function OrderCard({ order, index, onDelete }) {
               </div>
             </div>
 
-            {/* Quick Info - Always visible */}
             <div className="card-quick-info">
               <span className="quick-total">€{order.total.toFixed(2)}</span>
-              <span className="quick-items">{order.items.length} articoli</span>
+              <span className="quick-items">{order.items.length} art.</span>
               <span className="quick-people">{order.numPeople} pers.</span>
               
-              {/* Reservation indicator */}
               {(order.sessionType === 'lunch' || order.sessionType === 'dinner') && (
                 <span className="reservation-badge" title="Ha una prenotazione">
-                  📅 Prenotato
+                  📅
                 </span>
               )}
-            </div>
-
-            {/* Expanded Details */}
-            {expanded && (
-              <div className="card-details">
-                {/* Info */}
-                <div className="card-info">
-                  <div className="card-info-row">
-                    <Clock size={16} className="icon" />
-                    <span>{formatDate(order.timestamp)}</span>
-                  </div>
-                  
-                  <div className="card-info-row">
-                    <Users size={16} className="icon" />
-                    <span>{order.numPeople} {order.numPeople === 1 ? 'persona' : 'persone'}</span>
-                  </div>
-
-                  {order.sessionType !== 'immediate' && (
-                    <div className="card-info-row">
-                      <span className="session-badge">
-                        {order.sessionType === 'lunch' ? '🌞 Pranzo' : '🌙 Cena'}
-                        {order.sessionDate && ` - ${order.sessionDate} ${order.sessionTime || ''}`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Items */}
-                <div className="card-items">
-                  <div className="card-items-title">Articoli:</div>
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="card-item">
-                      <span className="item-name">{item.name}</span>
-                      <span className="item-quantity">x{item.quantity}</span>
-                      <span className="item-price">€{(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Notes */}
-                {order.notes && (
-                  <div className="card-note">
-                    💬 {order.notes}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Expand Indicator */}
-            <div className="card-expand-indicator">
-              <ChevronDown 
-                size={20} 
-                className={`expand-icon ${expanded ? 'expanded' : ''}`}
-              />
-              <span className="expand-text">{expanded ? 'Clicca per chiudere' : 'Clicca per dettagli'}</span>
             </div>
           </div>
         )}
       </Draggable>
 
-      {/* Delete Modal */}
       {showDeleteModal && (
         <div className="delete-modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
@@ -878,7 +843,7 @@ function OrderCard({ order, index, onDelete }) {
             </div>
             
             <div className="delete-modal-body">
-              <p className="warning-text">Stai per eliminare l'ordine di:</p>
+              <p className="warning-text">Stai per eliminare l ordine di:</p>
               <div className="delete-order-info">
                 <div className="delete-character">🎅 {order.characterName}</div>
                 <div className="delete-details">
