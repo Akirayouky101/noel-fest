@@ -864,7 +864,26 @@ export default function AdminKanban({ user, onLogout }) {
       {/* Seats Manager Modal */}
       <SeatsManager 
         isOpen={showSeatsManager} 
-        onClose={() => setShowSeatsManager(false)} 
+        onClose={() => setShowSeatsManager(false)}
+        onViewOrders={(characterName) => {
+          console.log('👁️ Visualizza ordini per:', characterName)
+          console.log('📦 allOrders disponibili:', allOrders.length)
+          
+          const characterOrders = allOrders.filter(
+            order => order.characterName === characterName
+          )
+          
+          console.log('📋 Ordini trovati:', characterOrders.length)
+          
+          if (characterOrders.length > 0) {
+            console.log('✅ Apro modale con ordini:', characterOrders)
+            setSelectedCharacter(characterName)
+            setSelectedOrders(characterOrders)
+          } else {
+            console.log('⚠️ Nessun ordine trovato')
+            toast.info(`Nessun ordine trovato per ${characterName}`)
+          }
+        }}
       />
 
       {/* Order Details Modal */}

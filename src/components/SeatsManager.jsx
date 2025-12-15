@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Users, UserPlus, UserMinus } from 'lucide-react'
+import { X, Users, UserPlus, UserMinus, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   getAvailableSeats,
@@ -16,7 +16,7 @@ import {
 } from '../lib/supabaseAPI'
 import './SeatsManager.css'
 
-export default function SeatsManager({ isOpen, onClose }) {
+export default function SeatsManager({ isOpen, onClose, onViewOrders }) {
   const [config, setConfig] = useState({})
   const [availableSeats, setAvailableSeats] = useState(0)
   const [availableWalkin, setAvailableWalkin] = useState(0)
@@ -263,6 +263,18 @@ export default function SeatsManager({ isOpen, onClose }) {
                         </span>
                       </div>
                       <div className="item-actions">
+                        {onViewOrders && (
+                          <button
+                            className="btn-view"
+                            onClick={() => {
+                              onViewOrders(res.character_name)
+                              onClose() // Chiudi il SeatsManager per vedere la modale ordini
+                            }}
+                            title="Vedi ordini"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        )}
                         <button
                           className="btn-icon"
                           onClick={() => handleUpdateReservation(res.character_name, res.num_people, -1)}
