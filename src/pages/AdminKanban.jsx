@@ -79,6 +79,15 @@ export default function AdminKanban({ user, onLogout }) {
     applyFilters()
   }, [orders, searchTerm, sessionFilter, dateFilter])
 
+  // Debug: monitor modal state
+  useEffect(() => {
+    console.log('🎯 Modal state changed:', {
+      selectedCharacter,
+      selectedOrdersCount: selectedOrders.length,
+      shouldShowModal: !!(selectedCharacter && selectedOrders.length > 0)
+    })
+  }, [selectedCharacter, selectedOrders])
+
   // Apply filters
   const applyFilters = () => {
     let filtered = [...orders]
@@ -826,14 +835,22 @@ export default function AdminKanban({ user, onLogout }) {
             reservations={reservations} 
             onRefresh={loadReservations}
             onReservationClick={(characterName) => {
+              console.log('🔍 Click su prenotazione:', characterName)
+              console.log('📦 allOrders disponibili:', allOrders.length)
+              
               // Cerco tra TUTTI gli ordini (anche quelli programmati non ancora visibili)
               const characterOrders = allOrders.filter(
                 order => order.characterName === characterName
               )
+              
+              console.log('📋 Ordini trovati per', characterName, ':', characterOrders.length)
+              
               if (characterOrders.length > 0) {
+                console.log('✅ Apro modale con ordini:', characterOrders)
                 setSelectedCharacter(characterName)
                 setSelectedOrders(characterOrders)
               } else {
+                console.log('⚠️ Nessun ordine trovato')
                 toast.info(`Nessun ordine trovato per ${characterName}`)
               }
             }}
