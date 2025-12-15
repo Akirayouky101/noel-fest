@@ -69,16 +69,23 @@ export default function OrdersDashboard() {
         console.log('📡 OrdersDashboard subscription:', status)
       })
     
-    // Polling ridotto come backup: ogni 2 minuti
-    const interval = setInterval(() => {
+    // Refresh forzato ogni 10 secondi per sicurezza
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Refresh automatico ordini...')
+      loadOrders()
+    }, 10000) // 10 secondi
+    
+    // Polling per posti/prenotazioni: ogni 30 secondi
+    const seatsInterval = setInterval(() => {
       loadAvailableSeats()
       loadActiveReservations()
       loadWalkinSeats()
-    }, 120000) // 2 minuti solo per posti/prenotazioni
+    }, 30000) // 30 secondi
     
     return () => {
       channel.unsubscribe()
-      clearInterval(interval)
+      clearInterval(refreshInterval)
+      clearInterval(seatsInterval)
     }
   }, [])
 
@@ -833,41 +840,25 @@ export default function OrdersDashboard() {
           </p>
         ) : (
           <div className="orders-grid">
-          {(() => {
-            // Raggruppa gli ordini per personaggio E arrival_group_id per evitare duplicati
-            const characterMap = new Map()
-            orders
-              .filter(order => {
-                // Filtra per view mode
-                const isCorrectView = viewMode === 'orders'
-                  ? (!order.sessionType || order.sessionType === 'immediate')
-                  : (order.sessionType && order.sessionType !== 'immediate')
-                
-                // Filtra per status
-                const matchesStatus = filterStatus === 'all' || order.status === filterStatus
-                
-                return isCorrectView && matchesStatus
-              })
-              .forEach(order => {
-                // Crea chiave unica: character + arrival_group_id
-                const arrivalId = order.arrival_group_id || 'default'
-                const key = `${order.character}__${arrivalId}`
-                
-                if (!characterMap.has(key)) {
-                  characterMap.set(key, {
-                    character: order.character,
-                    arrivalId: arrivalId,
-                    orders: []
-                  })
-                }
-                characterMap.get(key).orders.push(order)
-              })
-            
-            return Array.from(characterMap.entries()).map(([key, group]) => (
+          {/* Gli ordini sono già raggruppati correttamente da loadOrders(), 
+              quindi li renderizziamo direttamente senza ri-raggruppare */}
+          {orders
+            .filter(order => {
+              // Filtra per view mode
+              const isCorrectView = viewMode === 'orders'
+                ? (!order.sessionType || order.sessionType === 'immediate')
+                : (order.sessionType && order.sessionType !== 'immediate')
+              
+              // Filtra per status
+              const matchesStatus = filterStatus === 'all' || order.status === filterStatus
+              
+              return isCorrectView && matchesStatus
+            })
+            .map(arrival => (
               <CharacterArrivalCard
-                key={key}
-                character={group.character}
-                arrivals={group.orders}
+                key={`${arrival.character}__${arrival.arrival_group_id || 'default'}`}
+                character={arrival.character}
+                arrivals={[arrival]} // Passa come array singolo perché è già raggruppato
                 viewMode={viewMode}
                 isReservationUnlocked={isReservationUnlocked}
                 getSessionBadge={getSessionBadge}
@@ -888,8 +879,7 @@ export default function OrdersDashboard() {
                 getStatusColor={getStatusColor}
                 getStatusText={getStatusText}
               />
-            ))
-          })()}
+            ))}
         </div>
       )}
       </div>
