@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Edit, Trash2, Info, Search,
-  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut
+  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut, Settings
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -13,6 +13,7 @@ import {
   deleteMultipleOrders 
 } from '../lib/supabaseAPI'
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
+import SeatsManager from '../components/SeatsManager'
 import './Admin-Kanban.css'
 
 export default function AdminKanban({ user, onLogout }) {
@@ -21,6 +22,7 @@ export default function AdminKanban({ user, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [activeTab, setActiveTab] = useState('kanban') // 'kanban' or 'analytics'
+  const [showSeatsManager, setShowSeatsManager] = useState(false)
   const audioRef = useRef(null)
   
   // Filtri
@@ -417,6 +419,15 @@ export default function AdminKanban({ user, onLogout }) {
               </button>
               
               <button 
+                className="seats-btn"
+                onClick={() => setShowSeatsManager(true)}
+                title="Gestione Posti"
+              >
+                <Settings size={20} />
+                <span>Posti</span>
+              </button>
+              
+              <button 
                 className="logout-btn"
                 onClick={handleLogout}
                 title="Esci"
@@ -618,6 +629,12 @@ export default function AdminKanban({ user, onLogout }) {
           <AnalyticsDashboard orders={filteredOrders} />
         )}
       </div>
+
+      {/* Seats Manager Modal */}
+      <SeatsManager 
+        isOpen={showSeatsManager} 
+        onClose={() => setShowSeatsManager(false)} 
+      />
     </div>
   )
 }
