@@ -281,12 +281,27 @@ export async function deleteReservation(characterName) {
 }
 
 export async function updateReservationPeople(characterName, numPeople) {
-  const { error } = await supabase
+  // Aggiorna la prenotazione
+  const { error: reservationError } = await supabase
     .from('active_reservations')
     .update({ num_people: numPeople })
     .eq('character_name', characterName)
   
-  if (error) throw error
+  if (reservationError) throw reservationError
+  
+  // Aggiorna anche gli ordini associati
+  const { error: ordersError } = await supabase
+    .from('orders')
+    .update({ num_people: numPeople })
+    .eq('character_name', characterName)
+    .neq('status', 'cancelled') // Solo ordini attivi
+  
+  if (ordersError) {
+    console.warn('Errore aggiornamento ordini:', ordersError)
+    // Non bloccare se gli ordini falliscono, la prenotazione è già aggiornata
+  }
+  
+  console.log(`✅ Aggiornati num_people per ${characterName}: ${numPeople}`)
 }
 
 // =============================================

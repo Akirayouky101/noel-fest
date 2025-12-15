@@ -864,7 +864,11 @@ export default function AdminKanban({ user, onLogout }) {
       {/* Seats Manager Modal */}
       <SeatsManager 
         isOpen={showSeatsManager} 
-        onClose={() => setShowSeatsManager(false)}
+        onClose={() => {
+          setShowSeatsManager(false)
+          // Ricarica gli ordini per aggiornare num_people modificati
+          loadOrders()
+        }}
         onViewOrders={(characterName) => {
           console.log('👁️ Visualizza ordini per:', characterName)
           console.log('📦 allOrders disponibili:', allOrders.length)
