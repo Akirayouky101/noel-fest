@@ -3,7 +3,8 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
-  Volume2, VolumeX, Edit, Trash2, Info 
+  Volume2, VolumeX, Edit, Trash2, Info, Search,
+  Filter, Download, Calendar, X
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -15,9 +16,16 @@ import './Admin-Kanban.css'
 
 export default function AdminKanban() {
   const [orders, setOrders] = useState([])
+  const [filteredOrders, setFilteredOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const audioRef = useRef(null)
+  
+  // Filtri
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sessionFilter, setSessionFilter] = useState('all') // all, immediate, lunch, dinner
+  const [dateFilter, setDateFilter] = useState('all') // all, today, yesterday, week
+  const [showFilters, setShowFilters] = useState(false)
 
   // Stats
   const [stats, setStats] = useState({
@@ -38,6 +46,56 @@ export default function AdminKanban() {
   useEffect(() => {
     calculateStats()
   }, [orders])
+
+  // Apply filters
+  useEffect(() => {
+    applyFilters()
+  }, [orders, searchTerm, sessionFilter, dateFilter])
+
+  // Apply filters
+  const applyFilters = () => {
+    let filtered = [...orders]
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(order =>
+        order.characterName.toLowerCase().includes(term) ||
+        order.email.toLowerCase().includes(term)
+      )
+    }
+
+    // Session type filter
+    if (sessionFilter !== 'all') {
+      filtered = filtered.filter(order => order.sessionType === sessionFilter)
+    }
+
+    // Date filter
+    if (dateFilter !== 'all') {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.timestamp)
+        const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
+        
+        if (dateFilter === 'today') {
+          return orderDay.getTime() === today.getTime()
+        } else if (dateFilter === 'yesterday') {
+          const yesterday = new Date(today)
+          yesterday.setDate(yesterday.getDate() - 1)
+          return orderDay.getTime() === yesterday.getTime()
+        } else if (dateFilter === 'week') {
+          const weekAgo = new Date(today)
+          weekAgo.setDate(weekAgo.getDate() - 7)
+          return orderDate >= weekAgo
+        }
+        return true
+      })
+    }
+
+    setFilteredOrders(filtered)
+  }
 
   // Load orders from Supabase
   const loadOrders = async () => {
@@ -126,10 +184,10 @@ export default function AdminKanban() {
 
   // Calculate stats
   const calculateStats = () => {
-    const pending = orders.filter(o => o.status === 'pending').length
-    const preparing = orders.filter(o => o.status === 'preparing').length
-    const completed = orders.filter(o => o.status === 'completed').length
-    const revenue = orders
+    const pending = filteredOrders.filter(o => o.status === 'pending').length
+    const preparing = filteredOrders.filter(o => o.status === 'preparing').length
+    const completed = filteredOrders.filter(o => o.status === 'completed').length
+    const revenue = filteredOrders
       .filter(o => o.status === 'completed')
       .reduce((sum, o) => sum + o.total, 0)
 
@@ -137,7 +195,7 @@ export default function AdminKanban() {
       pending,
       preparing,
       completed,
-      total: orders.length,
+      total: filteredOrders.length,
       revenue
     })
   }
@@ -178,7 +236,47 @@ export default function AdminKanban() {
 
   // Get orders by status
   const getOrdersByStatus = (status) => {
-    return orders.filter(order => order.status === status)
+    return filteredOrders.filter(order => order.status === status)
+  }
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const headers = ['ID', 'Character', 'Email', 'Persone', 'Tipo', 'Sessione', 'Articoli', 'Note', 'Totale', 'Status', 'Data']
+    
+    const rows = filteredOrders.map(order => [
+      order.id,
+      order.characterName,
+      order.email,
+      order.numPeople,
+      order.orderType,
+      order.sessionType,
+      order.items.map(i => `${i.name} x${i.quantity}`).join('; '),
+      order.notes || '',
+      order.total.toFixed(2),
+      order.status,
+      new Date(order.timestamp).toLocaleString('it-IT')
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `ordini_noel_fest_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    
+    toast.success('CSV esportato con successo!')
+  }
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSessionFilter('all')
+    setDateFilter('all')
+    toast.success('Filtri azzerati')
   }
 
   // Delete order
@@ -317,6 +415,99 @@ export default function AdminKanban() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Filtri e Ricerca */}
+        <div className="filters-section">
+          <div className="filters-header">
+            <button 
+              className="filters-toggle"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter size={18} />
+              <span>Filtri {showFilters ? '▲' : '▼'}</span>
+              {(searchTerm || sessionFilter !== 'all' || dateFilter !== 'all') && (
+                <span className="filters-active-badge">{
+                  [searchTerm, sessionFilter !== 'all', dateFilter !== 'all'].filter(Boolean).length
+                }</span>
+              )}
+            </button>
+
+            <button 
+              className="export-btn"
+              onClick={exportToCSV}
+              title="Esporta in CSV"
+            >
+              <Download size={18} />
+              <span>Esporta CSV</span>
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="filters-content">
+              {/* Search */}
+              <div className="filter-group">
+                <label>
+                  <Search size={16} />
+                  Cerca Character
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nome character o email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+
+              {/* Session Type */}
+              <div className="filter-group">
+                <label>
+                  <Package size={16} />
+                  Tipo Sessione
+                </label>
+                <select
+                  value={sessionFilter}
+                  onChange={(e) => setSessionFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Tutte</option>
+                  <option value="immediate">⚡ Immediato</option>
+                  <option value="lunch">🌞 Pranzo</option>
+                  <option value="dinner">🌙 Cena</option>
+                </select>
+              </div>
+
+              {/* Date Range */}
+              <div className="filter-group">
+                <label>
+                  <Calendar size={16} />
+                  Periodo
+                </label>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Tutto</option>
+                  <option value="today">Oggi</option>
+                  <option value="yesterday">Ieri</option>
+                  <option value="week">Ultima settimana</option>
+                </select>
+              </div>
+
+              {/* Clear Filters */}
+              {(searchTerm || sessionFilter !== 'all' || dateFilter !== 'all') && (
+                <button 
+                  className="clear-filters-btn"
+                  onClick={clearFilters}
+                >
+                  <X size={16} />
+                  Azzera filtri
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Kanban Board */}
