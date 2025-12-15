@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Edit, Trash2, Info, Search,
-  Filter, Download, Calendar, X, BarChart3, LayoutGrid
+  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -15,7 +15,7 @@ import {
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import './Admin-Kanban.css'
 
-export default function AdminKanban() {
+export default function AdminKanban({ user, onLogout }) {
   const [orders, setOrders] = useState([])
   const [filteredOrders, setFilteredOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -41,7 +41,17 @@ export default function AdminKanban() {
   // Load orders on mount
   useEffect(() => {
     loadOrders()
-    setupRealtimeSubscription()
+    const cleanup = setupRealtimeSubscription()
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (cleanup) cleanup()
+    }
   }, [])
 
   // Calculate stats whenever orders change
@@ -144,7 +154,18 @@ export default function AdminKanban() {
             
             // Play notification sound
             if (audioEnabled && audioRef.current) {
-              audioRef.current.play()
+              audioRef.current.play().catch(err => console.log('Audio play error:', err))
+            }
+            
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('🎄 Nuovo Ordine - Noel Fest', {
+                body: `${newOrder.characterName} - ${newOrder.numPeople} persone\nTotale: €${newOrder.total.toFixed(2)}`,
+                icon: '/favicon.svg',
+                badge: '/favicon.svg',
+                tag: 'new-order',
+                requireInteraction: true
+              })
             }
           } else if (payload.eventType === 'UPDATE') {
             // Order updated
@@ -322,6 +343,20 @@ export default function AdminKanban() {
     })
   }
 
+  // Handle logout
+  const handleLogout = async () => {
+    if (!confirm('Sei sicuro di voler uscire?')) return
+    
+    try {
+      await supabase.auth.signOut()
+      toast.success('Logout effettuato')
+      if (onLogout) onLogout()
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Errore durante il logout')
+    }
+  }
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -358,6 +393,12 @@ export default function AdminKanban() {
             </h1>
             
             <div className="header-actions">
+              {user && (
+                <div className="user-info">
+                  <span className="user-email">{user.email}</span>
+                </div>
+              )}
+              
               <button 
                 className={`audio-toggle ${audioEnabled ? 'active' : ''}`}
                 onClick={toggleAudio}
@@ -373,6 +414,15 @@ export default function AdminKanban() {
               >
                 <RefreshCw size={20} />
                 <span>Aggiorna</span>
+              </button>
+              
+              <button 
+                className="logout-btn"
+                onClick={handleLogout}
+                title="Esci"
+              >
+                <LogOut size={20} />
+                <span>Esci</span>
               </button>
             </div>
           </div>

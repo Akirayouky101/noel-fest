@@ -55,8 +55,22 @@
   align-items: center;
 }
 
+.user-info {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.user-email {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .audio-toggle,
-.refresh-btn {
+.refresh-btn,
+.logout-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 215, 0, 0.3);
   color: #FFD700;
@@ -71,7 +85,8 @@
 }
 
 .audio-toggle:hover,
-.refresh-btn:hover {
+.refresh-btn:hover,
+.logout-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 215, 0, 0.6);
   transform: translateY(-2px);
@@ -80,6 +95,16 @@
 .audio-toggle.active {
   background: rgba(255, 215, 0, 0.2);
   border-color: #FFD700;
+}
+
+.logout-btn {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
 }
 
 /* Stats Bar */
