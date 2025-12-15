@@ -511,7 +511,7 @@ export default function AdminKanban({ user, onLogout }) {
                 onClick={() => setShowSeatsManager(true)}
                 title="Gestione Posti"
               >
-                <Settings size={20} />
+                <Armchair size={20} />
                 <span>Posti</span>
               </button>
               
