@@ -276,8 +276,13 @@ function Menu() {
 
         <div className="categories-scroll">
           <div className="categories-grid">
-            {categories.map(cat => (
-              <div key={cat.id} className="category-tile" onClick={() => handleCategoryClick(cat)}>
+            {categories.map((cat, index) => (
+              <div 
+                key={cat.id} 
+                className="category-tile" 
+                onClick={() => handleCategoryClick(cat)}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
                 <div className="tile-icon">{cat.icon}</div>
                 <div className="tile-info">
                   <h3>{cat.name}</h3>
