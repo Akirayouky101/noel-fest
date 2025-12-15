@@ -18,7 +18,8 @@ import OrderDetailsModal from '../components/OrderDetailsModal'
 import './Admin-Kanban-Professional.css'
 
 export default function AdminKanban({ user, onLogout }) {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState([]) // Ordini VISIBILI (filtrati per orario)
+  const [allOrders, setAllOrders] = useState([]) // TUTTI gli ordini (anche futuri)
   const [filteredOrders, setFilteredOrders] = useState([])
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -129,10 +130,12 @@ export default function AdminKanban({ user, onLogout }) {
       setLoading(true)
       const data = await getAllOrders()
       
+      // Salva TUTTI gli ordini (anche quelli non ancora visibili)
+      const allActiveOrders = data.filter(order => order.status !== 'cancelled')
+      setAllOrders(allActiveOrders)
+      
       // Filter out cancelled orders and orders not yet ready to be shown
-      const activeOrders = data.filter(order => {
-        if (order.status === 'cancelled') return false
-        
+      const visibleOrders = allActiveOrders.filter(order => {
         // Ordini immediati sono sempre visibili
         if (order.sessionType === 'immediate') return true
         
@@ -144,9 +147,9 @@ export default function AdminKanban({ user, onLogout }) {
         return true
       })
       
-      setOrders(activeOrders)
+      setOrders(visibleOrders)
       
-      toast.success(`${activeOrders.length} ordini caricati`)
+      toast.success(`${visibleOrders.length} ordini caricati${allActiveOrders.length > visibleOrders.length ? ` (${allActiveOrders.length - visibleOrders.length} programmati per dopo)` : ''}`)
     } catch (error) {
       console.error('Errore caricamento ordini:', error)
       toast.error('Errore nel caricamento degli ordini')
@@ -236,11 +239,19 @@ export default function AdminKanban({ user, onLogout }) {
             const newOrder = transformOrder(payload.new)
             console.log('✅ Adding new order to state:', newOrder.characterName)
             
+            // Aggiungi sempre a allOrders
+            if (newOrder.status !== 'cancelled') {
+              setAllOrders(prev => {
+                if (prev.some(o => o.id === newOrder.id)) return prev
+                return [newOrder, ...prev]
+              })
+            }
+            
             // Controllare se l'ordine deve essere mostrato
             if (newOrder.status === 'cancelled') return
             if ((newOrder.sessionType === 'lunch' || newOrder.sessionType === 'dinner') 
                 && !shouldShowScheduledOrder(newOrder)) {
-              console.log('⏰ Ordine programmato per dopo, non mostrato ora')
+              console.log('⏰ Ordine programmato per dopo, salvato ma non mostrato ora')
               return
             }
             
@@ -278,6 +289,12 @@ export default function AdminKanban({ user, onLogout }) {
             const updatedOrder = transformOrder(payload.new)
             console.log('♻️ Updating order in state:', updatedOrder.characterName)
             
+            // Aggiorna in allOrders
+            setAllOrders(prev => 
+              prev.map(order => order.id === updatedOrder.id ? updatedOrder : order)
+            )
+            
+            // Aggiorna in orders (visibili)
             setOrders(prev => {
               const updated = prev.map(order => 
                 order.id === updatedOrder.id ? updatedOrder : order
@@ -292,6 +309,10 @@ export default function AdminKanban({ user, onLogout }) {
             // Order deleted
             console.log('🗑️ Removing order from state:', payload.old.id)
             
+            // Rimuovi da allOrders
+            setAllOrders(prev => prev.filter(order => order.id !== payload.old.id))
+            
+            // Rimuovi da orders (visibili)
             setOrders(prev => prev.filter(order => order.id !== payload.old.id))
             
             toast('🗑️ Ordine eliminato', {
@@ -443,7 +464,8 @@ export default function AdminKanban({ user, onLogout }) {
       
       const result = await deleteMultipleOrders([orderId])
       
-      // Update local state
+      // Update local state - rimuovi da entrambi gli stati
+      setAllOrders(prev => prev.filter(order => order.id !== orderId))
       setOrders(prev => prev.filter(order => order.id !== orderId))
       
       // Show success with freed seats info
@@ -804,7 +826,8 @@ export default function AdminKanban({ user, onLogout }) {
             reservations={reservations} 
             onRefresh={loadReservations}
             onReservationClick={(characterName) => {
-              const characterOrders = orders.filter(
+              // Cerco tra TUTTI gli ordini (anche quelli programmati non ancora visibili)
+              const characterOrders = allOrders.filter(
                 order => order.characterName === characterName
               )
               if (characterOrders.length > 0) {
