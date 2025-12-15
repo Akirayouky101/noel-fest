@@ -725,7 +725,21 @@ export default function AdminKanban({ user, onLogout }) {
           </div>
         ) : activeTab === 'reservations' ? (
           /* Reservations View */
-          <ReservationsView reservations={reservations} onRefresh={loadReservations} />
+          <ReservationsView 
+            reservations={reservations} 
+            onRefresh={loadReservations}
+            onReservationClick={(characterName) => {
+              const characterOrders = orders.filter(
+                order => order.characterName === characterName
+              )
+              if (characterOrders.length > 0) {
+                setSelectedCharacter(characterName)
+                setSelectedOrders(characterOrders)
+              } else {
+                toast.info(`Nessun ordine trovato per ${characterName}`)
+              }
+            }}
+          />
         ) : (
           /* Analytics Dashboard */
           <AnalyticsDashboard orders={filteredOrders} />
@@ -920,7 +934,7 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
 }
 
 // Reservations View Component
-function ReservationsView({ reservations, onRefresh }) {
+function ReservationsView({ reservations, onRefresh, onReservationClick }) {
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleString('it-IT', {
       day: '2-digit',
@@ -952,7 +966,11 @@ function ReservationsView({ reservations, onRefresh }) {
       ) : (
         <div className="reservations-grid">
           {reservations.map((reservation) => (
-            <div key={reservation.id} className="reservation-card">
+            <div 
+              key={reservation.id} 
+              className="reservation-card clickable"
+              onClick={() => onReservationClick(reservation.character_name)}
+            >
               <div className="reservation-character">
                 🎅 {reservation.character_name}
               </div>
@@ -965,6 +983,9 @@ function ReservationsView({ reservations, onRefresh }) {
                   <Clock size={18} />
                   <span>{formatDate(reservation.created_at)}</span>
                 </div>
+              </div>
+              <div className="reservation-hint">
+                👆 Clicca per vedere gli ordini
               </div>
             </div>
           ))}

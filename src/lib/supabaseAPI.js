@@ -15,9 +15,9 @@ export async function getAllOrders() {
   // Trasforma dal formato PostgreSQL al formato dell'app
   return data.map(order => ({
     id: order.id,
-    character: order.character_name,
+    characterName: order.character_name, // FIXATO: era 'character'
     email: order.email,
-    num_people: order.num_people,
+    numPeople: order.num_people, // FIXATO: era 'num_people'
     orderType: order.order_type,
     sessionType: order.session_type,
     sessionDate: order.session_date,
@@ -27,7 +27,7 @@ export async function getAllOrders() {
     total: parseFloat(order.total),
     status: order.status,
     timestamp: order.timestamp,
-    arrival_group_id: order.arrival_group_id
+    arrivalGroupId: order.arrival_group_id // FIXATO: era 'arrival_group_id'
   }))
 }
 
