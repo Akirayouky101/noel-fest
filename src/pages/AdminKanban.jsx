@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Edit, Trash2, Info, Search,
-  Filter, Download, Calendar, X
+  Filter, Download, Calendar, X, BarChart3, LayoutGrid
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -12,6 +12,7 @@ import {
   updateMultipleOrdersStatus,
   deleteMultipleOrders 
 } from '../lib/supabaseAPI'
+import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import './Admin-Kanban.css'
 
 export default function AdminKanban() {
@@ -19,6 +20,7 @@ export default function AdminKanban() {
   const [filteredOrders, setFilteredOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [audioEnabled, setAudioEnabled] = useState(true)
+  const [activeTab, setActiveTab] = useState('kanban') // 'kanban' or 'analytics'
   const audioRef = useRef(null)
   
   // Filtri
@@ -375,6 +377,24 @@ export default function AdminKanban() {
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="tabs-navigation">
+            <button
+              className={`tab-btn ${activeTab === 'kanban' ? 'active' : ''}`}
+              onClick={() => setActiveTab('kanban')}
+            >
+              <LayoutGrid size={18} />
+              <span>Kanban Board</span>
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+            >
+              <BarChart3 size={18} />
+              <span>Analytics</span>
+            </button>
+          </div>
+
           {/* Stats Bar */}
           <div className="stats-bar">
             <div className="stat-card pending">
@@ -510,37 +530,43 @@ export default function AdminKanban() {
           )}
         </div>
 
-        {/* Kanban Board */}
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="kanban-board">
-            {/* Colonna Pending */}
-            <KanbanColumn
-              status="pending"
-              title="In Attesa"
-              icon="⏳"
-              orders={getOrdersByStatus('pending')}
-              onDelete={handleDeleteOrder}
-            />
+        {/* Content Rendering */}
+        {activeTab === 'kanban' ? (
+          /* Kanban Board */
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="kanban-board">
+              {/* Colonna Pending */}
+              <KanbanColumn
+                status="pending"
+                title="In Attesa"
+                icon="⏳"
+                orders={getOrdersByStatus('pending')}
+                onDelete={handleDeleteOrder}
+              />
 
-            {/* Colonna Preparing */}
-            <KanbanColumn
-              status="preparing"
-              title="In Preparazione"
-              icon="👨‍🍳"
-              orders={getOrdersByStatus('preparing')}
-              onDelete={handleDeleteOrder}
-            />
+              {/* Colonna Preparing */}
+              <KanbanColumn
+                status="preparing"
+                title="In Preparazione"
+                icon="👨‍🍳"
+                orders={getOrdersByStatus('preparing')}
+                onDelete={handleDeleteOrder}
+              />
 
-            {/* Colonna Completed */}
-            <KanbanColumn
-              status="completed"
-              title="Completati"
-              icon="✅"
-              orders={getOrdersByStatus('completed')}
-              onDelete={handleDeleteOrder}
-            />
-          </div>
-        </DragDropContext>
+              {/* Colonna Completed */}
+              <KanbanColumn
+                status="completed"
+                title="Completati"
+                icon="✅"
+                orders={getOrdersByStatus('completed')}
+                onDelete={handleDeleteOrder}
+              />
+            </div>
+          </DragDropContext>
+        ) : (
+          /* Analytics Dashboard */
+          <AnalyticsDashboard orders={filteredOrders} />
+        )}
       </div>
     </div>
   )
