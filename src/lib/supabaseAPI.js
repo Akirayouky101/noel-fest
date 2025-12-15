@@ -32,29 +32,50 @@ export async function getAllOrders() {
 }
 
 export async function createOrder(orderData) {
+  // Supporta sia camelCase che snake_case per compatibilità
+  const characterName = orderData.characterName || orderData.character
+  const numPeople = orderData.numPeople || orderData.num_people || 1
+  const orderType = orderData.orderType || orderData.order_type
+  const sessionType = orderData.sessionData?.sessionType || orderData.sessionType || 'immediate'
+  const sessionDate = orderData.sessionData?.sessionDate || orderData.sessionDate || null
+  const sessionTime = orderData.sessionData?.sessionTime || orderData.sessionTime || null
+  
+  console.log('📦 Creating order:', { characterName, email: orderData.email, numPeople, orderType })
+  
+  if (!characterName) {
+    throw new Error('character_name is required')
+  }
+  
+  const total = orderData.total || orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  
   const newOrder = {
-    character_name: orderData.character,
+    character_name: characterName,
     email: orderData.email,
-    num_people: orderData.num_people,
-    order_type: orderData.orderType,
-    session_type: orderData.sessionType || 'immediate',
-    session_date: orderData.sessionDate || null,
-    session_time: orderData.sessionTime || null,
+    num_people: numPeople,
+    order_type: orderType,
+    session_type: sessionType,
+    session_date: sessionDate,
+    session_time: sessionTime,
     items: orderData.items,
     notes: orderData.notes || '',
-    total: orderData.total,
+    total: total,
     status: 'pending',
-    // PostgreSQL genererà automaticamente l'UUID via gen_random_uuid() di default
-    // oppure possiamo usare crypto.randomUUID() se servisse lato client
     arrival_group_id: orderData.arrival_group_id || crypto.randomUUID()
   }
+  
+  console.log('📤 Sending to Supabase:', newOrder)
   
   const { data, error } = await supabase
     .from('orders')
     .insert([newOrder])
     .select()
   
-  if (error) throw error
+  if (error) {
+    console.error('❌ Order insert error:', error)
+    throw error
+  }
+  
+  console.log('✅ Order created successfully:', data[0])
   return data[0]
 }
 
@@ -229,15 +250,13 @@ export async function createReservation(characterName, email, numPeople, session
   try {
     console.log('📝 Creating reservation:', { characterName, email, numPeople, sessionData })
     
+    // La tabella active_reservations ha solo: character_name e num_people
+    // Email e session data sono salvati solo nell'ordine finale
     const { error } = await supabase
       .from('active_reservations')
       .insert([{ 
         character_name: characterName,
-        email: email, 
-        num_people: numPeople,
-        session_type: sessionData?.sessionType || null,
-        session_date: sessionData?.sessionDate || null,
-        session_time: sessionData?.sessionTime || null
+        num_people: numPeople
       }])
     
     if (error) {
