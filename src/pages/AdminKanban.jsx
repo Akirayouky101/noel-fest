@@ -360,14 +360,14 @@ export default function AdminKanban({ user, onLogout }) {
     id: dbOrder.id,
     characterName: dbOrder.character_name,
     email: dbOrder.email,
-    numPeople: dbOrder.num_people,
-    orderType: dbOrder.order_type,
-    sessionType: dbOrder.session_type,
+    numPeople: dbOrder.num_people || 0,
+    orderType: dbOrder.order_type || 'immediate',
+    sessionType: dbOrder.session_type || 'immediate',
     sessionDate: dbOrder.session_date,
     sessionTime: dbOrder.session_time,
-    items: dbOrder.items,
-    notes: dbOrder.notes,
-    total: parseFloat(dbOrder.total),
+    items: Array.isArray(dbOrder.items) ? dbOrder.items : [],
+    notes: dbOrder.notes || '',
+    total: parseFloat(dbOrder.total) || 0,
     status: dbOrder.status,
     timestamp: dbOrder.timestamp,
     arrivalGroupId: dbOrder.arrival_group_id
@@ -473,12 +473,12 @@ export default function AdminKanban({ user, onLogout }) {
       order.id,
       order.characterName,
       order.email,
-      order.numPeople,
-      order.orderType,
-      order.sessionType,
-      order.items.map(i => `${i.name} x${i.quantity}`).join('; '),
+      order.numPeople || 0,
+      order.orderType || '',
+      order.sessionType || '',
+      (order.items || []).map(i => `${i.name} x${i.quantity}`).join('; '),
       order.notes || '',
-      order.total.toFixed(2),
+      (order.total || 0).toFixed(2),
       order.status,
       new Date(order.timestamp).toLocaleString('it-IT')
     ])
@@ -1057,9 +1057,9 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
         )}
 
         <div className="card-quick-info">
-          <span className="quick-total">€{order.total.toFixed(2)}</span>
-          <span className="quick-items">{order.items.length} art.</span>
-          <span className="quick-people">{order.numPeople} pers.</span>
+          <span className="quick-total">€{order.total?.toFixed(2) || '0.00'}</span>
+          <span className="quick-items">{order.items?.length || 0} art.</span>
+          <span className="quick-people">{order.numPeople || 0} pers.</span>
           
           {(order.sessionType === 'lunch' || order.sessionType === 'dinner') && (
             <span className="reservation-badge" title="Ha una prenotazione">
@@ -1082,9 +1082,9 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
               <div className="delete-order-info">
                 <div className="delete-character">🎅 {order.characterName}</div>
                 <div className="delete-details">
-                  <span>Totale: €{order.total.toFixed(2)}</span>
-                  <span>{order.items.length} articoli</span>
-                  <span>{order.numPeople} persone</span>
+                  <span>Totale: €{order.total?.toFixed(2) || '0.00'}</span>
+                  <span>{order.items?.length || 0} articoli</span>
+                  <span>{order.numPeople || 0} persone</span>
                 </div>
               </div>
               <p className="warning-note">⚠️ Questa azione non può essere annullata!</p>
