@@ -86,39 +86,42 @@ function MenuNew() {
       return
     }
     
-    // Modalità solo visualizzazione: salta tutto e vai al menù cucina
-    if (type === 'view_only') {
-      setCharacter('Visitatore')
-      setOrderType('view_only')
-      setMenuType('cucina')
-      setShowWelcomeModal(false)
-      return
-    }
-    
     const newCharacter = getRandomCharacter()
     setCharacter(newCharacter)
     setOrderType(type)
     setShowWelcomeModal(false)
-    setShowMenuTypeModal(true) // Mostra modal selezione menù
+    
+    // PRENOTAZIONE: solo menù cucina, vai diretto alla sessione
+    if (type === 'at_register') {
+      setMenuType('cucina')
+      setActiveCategory('antipasti')
+      setShowSessionModal(true)
+      return
+    }
+    
+    // VISUALIZZAZIONE o IMMEDIATO: mostra scelta menù
+    if (type === 'view_only') {
+      setCharacter('Visitatore')
+    }
+    setShowMenuTypeModal(true)
   }
   
   const handleMenuTypeSelection = (type) => {
     setMenuType(type)
     setShowMenuTypeModal(false)
     
-    // Imposta categoria iniziale in base al tipo di menù
+    // Imposta categoria iniziale
     if (type === 'street') {
       setActiveCategory('panini')
     } else {
       setActiveCategory('antipasti')
     }
     
-    // Continua il flusso normale
-    if (orderType === 'at_register') {
-      setShowSessionModal(true)
-    } else {
+    // Se è ordine immediato, continua con email
+    if (orderType === 'immediate') {
       setShowEmailModal(true)
     }
+    // Se è view_only, vai diretto al menù (già tutto impostato)
   }
 
   const handleSessionConfirm = (session) => {
@@ -242,7 +245,7 @@ function MenuNew() {
     )
   }
 
-  // Modale selezione tipo menù
+  // Modale selezione tipo menù (per immediato e view_only)
   if (showMenuTypeModal) {
     return (
       <MenuTypeModal onSelect={handleMenuTypeSelection} />
@@ -280,21 +283,10 @@ function MenuNew() {
               <span>📋 Vai al Menu Completo</span>
             </button>
           ) : (
-            <>
-              {menuType && (
-                <button 
-                  className="switch-menu-btn" 
-                  onClick={() => setShowMenuTypeModal(true)}
-                  title="Cambia menù"
-                >
-                  <span>🔄</span>
-                </button>
-              )}
-              <button className="cart-button" onClick={() => setShowCart(true)}>
-                <span className="cart-icon">🛒</span>
-                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-              </button>
-            </>
+            <button className="cart-button" onClick={() => setShowCart(true)}>
+              <span className="cart-icon">🛒</span>
+              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+            </button>
           )}
         </div>
       </header>
@@ -566,34 +558,34 @@ function ProductDetailModal({ product, onClose, onGoToMenu }) {
 
 function MenuTypeModal({ onSelect }) {
   return (
-    <div className="welcome-overlay">
-      <div className="welcome-modal menu-type-modal">
-        <div className="welcome-content">
-          <h1>🍽️ Scegli il Menù</h1>
-          <p className="welcome-subtitle">Quale menù desideri consultare?</p>
+    <div className="modal-overlay">
+      <div className="modal-content menu-type-selection">
+        <div className="modal-header">
+          <h2>🍽️ Scegli il Menù</h2>
+          <p>Seleziona quale menù desideri consultare</p>
+        </div>
+        
+        <div className="menu-type-cards">
+          <div 
+            className="menu-type-card cucina"
+            onClick={() => onSelect('cucina')}
+          >
+            <div className="card-icon">🍝</div>
+            <h3>Menù Cucina</h3>
+            <p>Antipasti • Primi • Secondi</p>
+            <p>Contorni • Dolci • Bevande</p>
+            <div className="card-arrow">→</div>
+          </div>
           
-          <div className="menu-type-buttons">
-            <button 
-              className="welcome-btn menu-type-btn cucina"
-              onClick={() => onSelect('cucina')}
-            >
-              <span className="btn-icon">🍝</span>
-              <span className="btn-text">
-                <strong>Menù Cucina</strong>
-                <small>Antipasti, Primi, Secondi...</small>
-              </span>
-            </button>
-            
-            <button 
-              className="welcome-btn menu-type-btn street"
-              onClick={() => onSelect('street')}
-            >
-              <span className="btn-icon">🌭</span>
-              <span className="btn-text">
-                <strong>Street Food</strong>
-                <small>Panini, Fritti, Golosoni...</small>
-              </span>
-            </button>
+          <div 
+            className="menu-type-card street"
+            onClick={() => onSelect('street')}
+          >
+            <div className="card-icon">🌭</div>
+            <h3>Street Food</h3>
+            <p>Panini • Fritti</p>
+            <p>Golosoni • Bevande</p>
+            <div className="card-arrow">→</div>
           </div>
         </div>
       </div>
