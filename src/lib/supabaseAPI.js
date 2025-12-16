@@ -272,12 +272,50 @@ export async function createReservation(characterName, email, numPeople, session
 }
 
 export async function deleteReservation(characterName) {
-  const { error } = await supabase
-    .from('active_reservations')
-    .delete()
-    .eq('character_name', characterName)
-  
-  if (error) throw error
+  try {
+    console.log(`🧹 Deleting all data for character: ${characterName}`)
+    
+    // 1. Delete from active_reservations
+    const { error: resError } = await supabase
+      .from('active_reservations')
+      .delete()
+      .eq('character_name', characterName)
+    
+    if (resError) {
+      console.warn('Warning deleting reservation:', resError)
+    } else {
+      console.log(`✅ Deleted active_reservation for ${characterName}`)
+    }
+    
+    // 2. Delete ALL orders for this character (immediate, lunch, dinner)
+    const { error: ordersError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('character_name', characterName)
+    
+    if (ordersError) {
+      console.warn('Warning deleting orders:', ordersError)
+    } else {
+      console.log(`✅ Deleted all orders for ${characterName}`)
+    }
+    
+    // 3. Delete from walkin_seats if exists
+    const { error: walkinError } = await supabase
+      .from('walkin_seats')
+      .delete()
+      .eq('character_name', characterName)
+    
+    if (walkinError) {
+      console.warn('Warning deleting walk-in:', walkinError)
+    } else {
+      console.log(`✅ Deleted walk-in for ${characterName}`)
+    }
+    
+    console.log(`✅ Complete cleanup for ${characterName}`)
+  } catch (error) {
+    console.error('Error in deleteReservation:', error)
+    throw error
+  }
 }
 
 export async function updateReservationPeople(characterName, numPeople) {
