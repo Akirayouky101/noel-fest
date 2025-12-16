@@ -34,6 +34,8 @@ function MenuNew() {
   const [cart, setCart] = useState([])
   const [showCart, setShowCart] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [showProductModal, setShowProductModal] = useState(false)
 
   const scrollContainerRef = useRef(null)
   const categoryRefs = useRef({})
@@ -72,6 +74,14 @@ function MenuNew() {
   const handleStartFlow = (type) => {
     if (type === 'at_register' && availableSeats === 0) {
       setShowSeatsFullModal(true)
+      return
+    }
+    
+    // Modalità solo visualizzazione: salta tutto e vai al menù
+    if (type === 'view_only') {
+      setCharacter('Visitatore')
+      setOrderType('view_only')
+      setShowWelcomeModal(false)
       return
     }
     
@@ -121,6 +131,13 @@ function MenuNew() {
   }
 
   const addToCart = (item) => {
+    // In modalità view_only, apri la modal del prodotto invece di aggiungere al carrello
+    if (orderType === 'view_only') {
+      setSelectedProduct(item)
+      setShowProductModal(true)
+      return
+    }
+    
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id)
       if (existing) {
@@ -220,16 +237,32 @@ function MenuNew() {
             <p className="user-name">{character}</p>
           </div>
         </div>
-        <button className="cart-button" onClick={() => setShowCart(true)}>
-          <span className="cart-icon">🛒</span>
-          {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-        </button>
+        
+        {orderType === 'view_only' ? (
+          <button className="view-mode-btn" onClick={() => window.location.href = '/'}>
+            <span>📋 Vai al Menu Completo</span>
+          </button>
+        ) : (
+          <button className="cart-button" onClick={() => setShowCart(true)}>
+            <span className="cart-icon">🛒</span>
+            {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+          </button>
+        )}
       </header>
 
+      {/* VIEW MODE BANNER */}
+      {orderType === 'view_only' && (
+        <div className="view-mode-banner">
+          <span>👁️ Modalità visualizzazione - Clicca su un piatto per i dettagli</span>
+        </div>
+      )}
+
       {/* SEATS BAR */}
-      <div className="seats-bar">
-        <span>🪑 Posti disponibili: <strong>{availableSeats}</strong></span>
-      </div>
+      {orderType !== 'view_only' && (
+        <div className="seats-bar">
+          <span>🪑 Posti disponibili: <strong>{availableSeats}</strong></span>
+        </div>
+      )}
 
       {/* SIDEBAR CATEGORIE (Desktop) */}
       <aside className="categories-sidebar">
@@ -312,12 +345,24 @@ function MenuNew() {
       )}
 
       {/* FAB CARRELLO (Mobile Alternative) */}
-      {cartCount > 0 && (
+      {cartCount > 0 && orderType !== 'view_only' && (
         <button className="fab-cart" onClick={() => setShowCart(true)}>
           <span className="fab-icon">🛒</span>
           <span className="fab-count">{cartCount}</span>
           <span className="fab-total">€{cartTotal.toFixed(2)}</span>
         </button>
+      )}
+
+      {/* PRODUCT DETAIL MODAL */}
+      {showProductModal && selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => {
+            setShowProductModal(false)
+            setSelectedProduct(null)
+          }}
+          onGoToMenu={() => window.location.href = '/'}
+        />
       )}
     </div>
   )
@@ -352,6 +397,14 @@ function WelcomeModal({ onStart, availableSeats }) {
               <div className="btn-content">
                 <h3>Ordine Immediato</h3>
                 <p>Solo ordine, ritiro sul posto</p>
+              </div>
+            </button>
+            
+            <button className="welcome-btn view-only" onClick={() => onStart('view_only')}>
+              <span className="btn-icon eye-animated">👁️</span>
+              <div className="btn-content">
+                <h3>Vedi Menù</h3>
+                <p>Esplora i nostri piatti</p>
               </div>
             </button>
           </div>
@@ -426,6 +479,50 @@ function SeatsFullModal({ onClose }) {
         <button className="close-btn" onClick={onClose}>
           Torna Indietro
         </button>
+      </div>
+    </div>
+  )
+}
+
+function ProductDetailModal({ product, onClose, onGoToMenu }) {
+  return (
+    <div className="product-modal-overlay" onClick={onClose}>
+      <div className="product-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="product-modal-close" onClick={onClose}>×</button>
+        
+        <div className="product-modal-header">
+          <h2>{product.name}</h2>
+          <span className="product-modal-price">€{product.price.toFixed(2)}</span>
+        </div>
+        
+        <div className="product-modal-body">
+          {product.description && (
+            <p className="product-modal-description">{product.description}</p>
+          )}
+          
+          {product.ingredients && (
+            <div className="product-modal-ingredients">
+              <h3>🧪 Ingredienti:</h3>
+              <p>{product.ingredients}</p>
+            </div>
+          )}
+          
+          {product.allergens && (
+            <div className="product-modal-allergens">
+              <h3>⚠️ Allergeni:</h3>
+              <p>{product.allergens}</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="product-modal-footer">
+          <p className="product-modal-info">
+            💡 Vuoi ordinare questo prodotto?
+          </p>
+          <button className="product-modal-order-btn" onClick={onGoToMenu}>
+            📋 Vai al Menu Completo
+          </button>
+        </div>
       </div>
     </div>
   )
