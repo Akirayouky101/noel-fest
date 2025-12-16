@@ -194,8 +194,14 @@ export default function AdminKanban({ user, onLogout }) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
     
+    // Debug log
+    console.log(`🔍 Checking order: ${order.characterName} | Date: ${order.sessionDate} | Type: ${order.sessionType}`)
+    
     // Se l'ordine è per un giorno futuro, non mostrarlo
-    if (orderDay > today) return false
+    if (orderDay > today) {
+      console.log(`  ⏭️ Futuro: ${order.sessionDate} > oggi`)
+      return false
+    }
     
     // Se l'ordine è per oggi, controllare l'orario
     if (orderDay.getTime() === today.getTime()) {
@@ -203,19 +209,28 @@ export default function AdminKanban({ user, onLogout }) {
       const currentMinutes = now.getMinutes()
       const currentTimeInMinutes = currentHour * 60 + currentMinutes
       
+      console.log(`  📅 Oggi! Ora corrente: ${currentHour}:${currentMinutes.toString().padStart(2, '0')}`)
+      
       if (order.sessionType === 'lunch') {
         // Pranzo: mostrare dalle 11:00
         const lunchStartTime = 11 * 60 // 11:00
-        return currentTimeInMinutes >= lunchStartTime
+        const show = currentTimeInMinutes >= lunchStartTime
+        console.log(`  🍝 Pranzo: ${show ? '✅ Mostra' : '⏰ Nascosto fino alle 11:00'}`)
+        return show
       } else if (order.sessionType === 'dinner') {
         // Cena: mostrare dalle 18:00
         const dinnerStartTime = 18 * 60 // 18:00
-        return currentTimeInMinutes >= dinnerStartTime
+        const show = currentTimeInMinutes >= dinnerStartTime
+        console.log(`  🍷 Cena: ${show ? '✅ Mostra' : '⏰ Nascosto fino alle 18:00'}`)
+        return show
       }
     }
     
     // Se l'ordine è per un giorno passato, mostralo (per storico)
-    if (orderDay < today) return true
+    if (orderDay < today) {
+      console.log(`  📜 Passato: mostra`)
+      return true
+    }
     
     return true
   }
