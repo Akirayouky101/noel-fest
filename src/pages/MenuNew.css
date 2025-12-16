@@ -785,13 +785,13 @@ body {
 
 /* ===== VIEW ONLY MODE ===== */
 .welcome-btn.view-only {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
+  border-color: #8B0000;
 }
 
 .welcome-btn.view-only:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 12px 24px rgba(139, 0, 0, 0.3);
 }
 
 .eye-animated {
@@ -806,7 +806,7 @@ body {
 }
 
 .view-mode-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -821,11 +821,11 @@ body {
 
 .view-mode-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
 }
 
 .view-mode-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
   color: white;
   padding: 12px 20px;
   text-align: center;
@@ -897,7 +897,7 @@ body {
 }
 
 .product-modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
   color: white;
   padding: 32px 24px 24px;
   border-radius: 24px 24px 0 0;
@@ -969,7 +969,7 @@ body {
 
 .product-modal-order-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
   color: white;
   border: none;
   padding: 16px 24px;

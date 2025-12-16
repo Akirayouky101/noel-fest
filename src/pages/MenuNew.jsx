@@ -317,6 +317,7 @@ function MenuNew() {
                     item={item}
                     index={index}
                     onAddToCart={addToCart}
+                    viewOnly={orderType === 'view_only'}
                   />
                 ))}
               </div>
@@ -491,27 +492,13 @@ function ProductDetailModal({ product, onClose, onGoToMenu }) {
         <button className="product-modal-close" onClick={onClose}>×</button>
         
         <div className="product-modal-header">
-          <h2>{product.name}</h2>
+          <h2>🎁 {product.name}</h2>
           <span className="product-modal-price">€{product.price.toFixed(2)}</span>
         </div>
         
         <div className="product-modal-body">
           {product.description && (
             <p className="product-modal-description">{product.description}</p>
-          )}
-          
-          {product.ingredients && (
-            <div className="product-modal-ingredients">
-              <h3>🧪 Ingredienti:</h3>
-              <p>{product.ingredients}</p>
-            </div>
-          )}
-          
-          {product.allergens && (
-            <div className="product-modal-allergens">
-              <h3>⚠️ Allergeni:</h3>
-              <p>{product.allergens}</p>
-            </div>
           )}
         </div>
         
