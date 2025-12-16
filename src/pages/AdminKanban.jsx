@@ -147,8 +147,7 @@ export default function AdminKanban({ user, onLogout }) {
       
       setAllOrders(allActiveOrders)
       
-      // KANBAN: solo ordini IMMEDIATI (at_register)
-      // PRENOTAZIONI: gestisce tutti gli ordini programmati (lunch/dinner)
+      // KANBAN: ordini IMMEDIATI + PROGRAMMATI CHE SONO ATTIVI (ora >= orario pranzo/cena)
       const immediateOrders = allActiveOrders.filter(order => 
         !order.sessionType || order.sessionType === 'immediate'
       )
@@ -157,12 +156,21 @@ export default function AdminKanban({ user, onLogout }) {
         order.sessionType === 'lunch' || order.sessionType === 'dinner'
       )
       
-      console.log('🏃 Ordini immediati (Kanban):', immediateOrders.length)
-      console.log('📅 Ordini programmati (Prenotazioni):', scheduledOrders.length)
+      // Filtra gli ordini programmati per mostrare solo quelli ATTIVI (ora >= orario)
+      const activeScheduledOrders = scheduledOrders.filter(shouldShowScheduledOrder)
       
-      setOrders(immediateOrders)
+      // Combina ordini immediati + programmati attivi per il Kanban
+      const allKanbanOrders = [...immediateOrders, ...activeScheduledOrders]
       
-      toast.success(`✅ ${immediateOrders.length} ordini immediati | 📅 ${scheduledOrders.length} prenotazioni`)
+      console.log('🏃 Ordini immediati:', immediateOrders.length)
+      console.log('📅 Ordini programmati totali:', scheduledOrders.length)
+      console.log('✅ Ordini programmati ATTIVI (da mostrare):', activeScheduledOrders.length)
+      console.log('📊 Totale Kanban:', allKanbanOrders.length)
+      
+      setOrders(allKanbanOrders)
+      
+      const futureCount = scheduledOrders.length - activeScheduledOrders.length
+      toast.success(`✅ ${allKanbanOrders.length} ordini attivi | ⏰ ${futureCount} prenotazioni future`)
     } catch (error) {
       console.error('Errore caricamento ordini:', error)
       toast.error('Errore nel caricamento degli ordini')
@@ -740,13 +748,6 @@ export default function AdminKanban({ user, onLogout }) {
               </div>
             </div>
 
-            <div className="stat-card preparing">
-              <div className="stat-card-content">
-                <h3>👨‍🍳 In Preparazione</h3>
-                <p className="stat-value">{stats.preparing}</p>
-              </div>
-            </div>
-
             <div className="stat-card completed">
               <div className="stat-card-content">
                 <h3>✅ Completati</h3>
@@ -856,7 +857,7 @@ export default function AdminKanban({ user, onLogout }) {
 
         {/* Content Rendering */}
         {activeTab === 'kanban' ? (
-          /* Kanban Board - SENZA DRAG AND DROP */
+          /* Kanban Board - SOLO 2 COLONNE: In Attesa e Completati */
           <div className="kanban-board">
             {/* Colonna Pending */}
             <KanbanColumn
@@ -864,17 +865,6 @@ export default function AdminKanban({ user, onLogout }) {
               title="In Attesa"
               icon="⏳"
               orders={getOrdersByStatus('pending')}
-              onDelete={handleDeleteOrder}
-              onCardClick={handleCardClick}
-              onStatusChange={handleStatusChange}
-            />
-
-            {/* Colonna Preparing */}
-            <KanbanColumn
-              status="preparing"
-              title="In Preparazione"
-              icon="👨‍🍳"
-              orders={getOrdersByStatus('preparing')}
               onDelete={handleDeleteOrder}
               onCardClick={handleCardClick}
               onStatusChange={handleStatusChange}
@@ -1066,13 +1056,6 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
               disabled={order.status === 'pending'}
             >
               ⏳ In Attesa
-            </button>
-            <button
-              className="status-option preparing"
-              onClick={() => handleStatusChange('preparing')}
-              disabled={order.status === 'preparing'}
-            >
-              👨‍🍳 In Preparazione
             </button>
             <button
               className="status-option completed"

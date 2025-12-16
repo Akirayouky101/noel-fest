@@ -22,9 +22,48 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
     return labels[status] || status
   }
 
+  const COPERTO = 1.50
+
   const totalOrders = orders.length
-  const totalAmount = orders.reduce((sum, order) => sum + order.total, 0)
-  const totalPeople = orders.reduce((sum, order) => sum + order.numPeople, 0)
+  
+  // FIXED: Il numero di persone è lo stesso in tutti gli ordini dello stesso character
+  const totalPeople = orders[0]?.numPeople || 0
+  
+  // FIXED: Calcola totale corretto - il coperto è calcolato UNA VOLTA per sessione (lunch/dinner)
+  // Ogni ordine ha items + coperto nel total, quindi devo sottrarre il coperto duplicato
+  
+  // Raggruppa ordini per sessione (immediate, lunch, dinner + data)
+  const sessionGroups = {}
+  orders.forEach(order => {
+    const sessionKey = order.sessionType === 'immediate' 
+      ? `immediate-${order.timestamp}` 
+      : `${order.sessionType}-${order.sessionDate || ''}`
+    
+    if (!sessionGroups[sessionKey]) {
+      sessionGroups[sessionKey] = []
+    }
+    sessionGroups[sessionKey].push(order)
+  })
+  
+  // Calcola totale corretto: somma items di tutti gli ordini + coperto UNA VOLTA per sessione
+  let totalAmount = 0
+  let totalCoperto = 0
+  
+  Object.values(sessionGroups).forEach(sessionOrders => {
+    // Somma solo gli items (total - coperto)
+    const sessionItemsTotal = sessionOrders.reduce((sum, order) => {
+      const orderCoperto = COPERTO * (order.numPeople || 0)
+      const orderItems = order.total - orderCoperto
+      return sum + orderItems
+    }, 0)
+    
+    // Aggiungi coperto UNA VOLTA per questa sessione
+    const sessionCoperto = COPERTO * totalPeople
+    totalAmount += sessionItemsTotal + sessionCoperto
+    totalCoperto += sessionCoperto
+  })
+  
+  const numberOfSessions = Object.keys(sessionGroups).length
 
   return (
     <div className="order-details-modal-overlay" onClick={onClose}>
@@ -38,7 +77,8 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
             <div className="modal-subtitle">
               {totalOrders} {totalOrders === 1 ? 'ordine' : 'ordini'} • 
               {totalPeople} {totalPeople === 1 ? 'persona' : 'persone'} • 
-              Totale: €{totalAmount.toFixed(2)}
+              {numberOfSessions} {numberOfSessions === 1 ? 'sessione' : 'sessioni'} •
+              Totale: €{totalAmount.toFixed(2)} (coperto: €{totalCoperto.toFixed(2)})
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
