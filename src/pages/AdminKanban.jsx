@@ -722,6 +722,13 @@ export default function AdminKanban({ user, onLogout }) {
               <span>Kanban Board</span>
             </button>
             <button
+              className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+              onClick={() => setActiveTab('completed')}
+            >
+              <Package size={18} />
+              <span>Completati</span>
+            </button>
+            <button
               className={`tab-btn ${activeTab === 'reservations' ? 'active' : ''}`}
               onClick={() => setActiveTab('reservations')}
             >
@@ -871,6 +878,22 @@ export default function AdminKanban({ user, onLogout }) {
               onStatusChange={handleStatusChange}
             />
           </div>
+        ) : activeTab === 'completed' ? (
+          /* Completed Orders View */
+          <CompletedOrdersView 
+            orders={allOrders.filter(o => o.status === 'completed')}
+            onOrderClick={(characterName) => {
+              const characterOrders = allOrders.filter(
+                order => (order.characterName === characterName || order.character_name === characterName) 
+                  && order.status === 'completed'
+              )
+              
+              if (characterOrders.length > 0) {
+                setSelectedCharacter(characterName)
+                setSelectedOrders(characterOrders)
+              }
+            }}
+          />
         ) : activeTab === 'reservations' ? (
           /* Reservations View */
           <ReservationsView 
@@ -943,6 +966,96 @@ export default function AdminKanban({ user, onLogout }) {
           orders={selectedOrders}
           onClose={closeModal}
         />
+      )}
+    </div>
+  )
+}
+
+// Completed Orders View Component
+function CompletedOrdersView({ orders, onOrderClick }) {
+  // Raggruppa gli ordini completati per personaggio
+  const groupedOrders = {}
+  
+  orders.forEach(order => {
+    const charName = order.characterName || order.character_name
+    if (!groupedOrders[charName]) {
+      groupedOrders[charName] = []
+    }
+    groupedOrders[charName].push(order)
+  })
+
+  const characters = Object.keys(groupedOrders).sort()
+
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <div className="completed-orders-view">
+      <div className="completed-header">
+        <h2>
+          <Package size={24} />
+          Ordini Completati
+        </h2>
+        <div className="completed-count">{orders.length} ordini</div>
+      </div>
+
+      {characters.length === 0 ? (
+        <div className="empty-completed">
+          <Package size={64} />
+          <p>Nessun ordine completato</p>
+        </div>
+      ) : (
+        <div className="completed-grid">
+          {characters.map(characterName => {
+            const characterOrders = groupedOrders[characterName]
+            const totalAmount = characterOrders.reduce((sum, o) => sum + o.total, 0)
+            const totalPeople = Math.max(...characterOrders.map(o => o.numPeople || 0))
+            const lastOrder = characterOrders.sort((a, b) => 
+              new Date(b.timestamp) - new Date(a.timestamp)
+            )[0]
+
+            return (
+              <div 
+                key={characterName}
+                className="completed-card"
+                onClick={() => onOrderClick(characterName)}
+              >
+                <div className="completed-card-header">
+                  <div className="completed-character">
+                    ✅ {characterName}
+                  </div>
+                  <div className="completed-badge">
+                    {characterOrders.length} {characterOrders.length === 1 ? 'ordine' : 'ordini'}
+                  </div>
+                </div>
+
+                <div className="completed-info">
+                  <div className="completed-info-item">
+                    <Users size={16} />
+                    <span>{totalPeople} pers.</span>
+                  </div>
+                  <div className="completed-info-item">
+                    <Clock size={16} />
+                    <span>{formatDate(lastOrder.timestamp)}</span>
+                  </div>
+                  <div className="completed-total">
+                    €{totalAmount.toFixed(2)}
+                  </div>
+                </div>
+
+                <div className="completed-hint">
+                  👆 Clicca per dettagli
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 
 export default function OrderDetailsModal({ characterName, orders, onClose }) {
   const [isCompleting, setIsCompleting] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
   
   if (!orders || orders.length === 0) return null
 
@@ -80,10 +81,7 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
   const numberOfSessions = Object.keys(sessionGroups).length
 
   const handleCompleteAllOrders = async () => {
-    if (!window.confirm(`Completare tutti gli ${totalOrders} ordini di ${characterName}?`)) {
-      return
-    }
-    
+    setShowConfirmModal(false)
     setIsCompleting(true)
     
     try {
@@ -214,7 +212,7 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
           <div className="modal-footer">
             <button 
               className="modal-complete-btn"
-              onClick={handleCompleteAllOrders}
+              onClick={() => setShowConfirmModal(true)}
               disabled={isCompleting}
             >
               <CheckCircle size={20} />
@@ -223,6 +221,37 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
           </div>
         )}
       </div>
+
+      {/* Modale Conferma Completamento */}
+      {showConfirmModal && (
+        <div className="confirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">🎄</div>
+            <h2 className="confirm-title">Completare Ordini?</h2>
+            <p className="confirm-message">
+              Stai per completare <strong>{totalOrders} {totalOrders === 1 ? 'ordine' : 'ordini'}</strong> di
+            </p>
+            <div className="confirm-character">🎅 {characterName}</div>
+            <p className="confirm-submessage">
+              Totale: <strong>€{totalAmount.toFixed(2)}</strong> • {totalPeople} {totalPeople === 1 ? 'persona' : 'persone'}
+            </p>
+            <div className="confirm-actions">
+              <button 
+                className="confirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Annulla
+              </button>
+              <button 
+                className="confirm-btn confirm"
+                onClick={handleCompleteAllOrders}
+              >
+                ✅ Conferma
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

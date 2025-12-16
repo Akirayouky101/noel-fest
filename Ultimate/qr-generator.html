@@ -1,183 +1,327 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Unico - Noel Fest</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code - Visualizza Menù Noel Fest</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, #1a4d2e, #0d2818);
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
 
-        h1 {
-            color: #FFD700;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-        }
+    h1 {
+      color: #8B0000;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
 
-        .qr-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            border: 4px solid #FFD700;
-        }
+    .subtitle {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
 
-        .qr-card h2 {
-            color: #8B0000;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-        }
+    .qr-section {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
-        .qr-card img {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            margin: 20px 0;
-            border: 3px solid #8B0000;
-            border-radius: 12px;
-        }
+    #qrcode {
+      display: inline-block;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 
-        .qr-url {
-            font-size: 1.1rem;
-            color: #666;
-            font-weight: bold;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            word-break: break-all;
-        }
+    .url-display {
+      background: #fff;
+      border: 2px solid #8B0000;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+      word-break: break-all;
+      color: #8B0000;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
 
-        .info {
-            color: #FFD700;
-            background: linear-gradient(135deg, #8B0000, #A52A2A);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 30px;
-            text-align: center;
-            border: 3px solid #FFD700;
-        }
+    .info {
+      background: #e8f5e9;
+      border-left: 4px solid #2e7d32;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+      text-align: left;
+    }
 
-        .info h3 {
-            margin-bottom: 10px;
-        }
+    .info h3 {
+      color: #2e7d32;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .info p {
-            margin: 5px 0;
-            font-size: 0.95rem;
-        }
+    .info ul {
+      color: #555;
+      line-height: 1.8;
+      padding-left: 20px;
+    }
 
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
 
-        button {
-            flex: 1;
-            padding: 15px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #8B0000;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    button {
+      background: linear-gradient(135deg, #8B0000, #CD5C5C);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
-        }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 0, 0, 0.3);
+    }
 
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
+    button:active {
+      transform: translateY(0);
+    }
 
-            .info, .button-group {
-                display: none;
-            }
+    .size-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
 
-            .qr-card {
-                box-shadow: none;
-            }
-        }
-    </style>
+    .size-controls input {
+      width: 100px;
+      padding: 8px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .size-controls label {
+      color: #666;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .container {
+        padding: 24px;
+      }
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎄 QR Code Unico - Noel Fest</h1>
+  <div class="container">
+    <h1>👁️ Visualizza Menù</h1>
+    <p class="subtitle">Scansiona il QR per vedere il menù senza ordinare</p>
 
-        <div class="qr-card">
-            <h2>Menu Ordini</h2>
-            <img id="qr-code" alt="QR Code Noel Fest" />
-            <div class="qr-url" id="url-display"></div>
-            
-            <div class="button-group">
-                <button onclick="window.print()">🖨️ Stampa QR</button>
-                <button onclick="downloadQR()">💾 Scarica PNG</button>
-            </div>
-        </div>
-
-        <div class="info">
-            <h3>ℹ️ Informazioni</h3>
-            <p>Questo è il QR code <strong>UNICO</strong> per tutti i clienti</p>
-            <p>Porta direttamente alla pagina principale del menu</p>
-            <p>Scansionando il QR, i clienti possono ordinare e prenotare</p>
-            <p><strong>Non cambierà mai</strong> - può essere stampato e riutilizzato</p>
-        </div>
+    <div class="qr-section">
+      <div id="qrcode"></div>
+      <div class="url-display" id="urlDisplay">Generazione QR code...</div>
+      
+      <div class="size-controls">
+        <label>Dimensione:</label>
+        <input type="number" id="qrSize" value="256" min="128" max="512" step="64">
+        <button onclick="updateQRSize()">🔄 Aggiorna</button>
+      </div>
     </div>
 
-    <script>
-        const BASE_URL = 'https://noelfest.appdataconnect.it';
-        
-        function generateQR() {
-            const qrImg = document.getElementById('qr-code');
-            const urlDisplay = document.getElementById('url-display');
-            
-            // URL unico senza parametri
-            const url = BASE_URL;
-            
-            // Genera QR usando API pubblica
-            const qrData = encodeURIComponent(url);
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${qrData}&color=8B0000&bgcolor=FFFFFF&margin=20`;
-            
-            urlDisplay.textContent = url;
-        }
+    <div class="controls">
+      <button onclick="downloadQR()">
+        📥 Scarica QR
+      </button>
+      <button onclick="printQR()">
+        🖨️ Stampa QR
+      </button>
+      <button onclick="copyURL()">
+        📋 Copia Link
+      </button>
+    </div>
 
-        function downloadQR() {
-            const qrImg = document.getElementById('qr-code');
-            const link = document.createElement('a');
-            link.href = qrImg.src;
-            link.download = 'noel-fest-qr-menu.png';
-            link.click();
-        }
+    <div class="info">
+      <h3>ℹ️ Come funziona</h3>
+      <ul>
+        <li>Gli utenti scansionano il QR code con il telefono</li>
+        <li>Si apre automaticamente la modalità "Visualizza Menù"</li>
+        <li>Possono sfogliare tutti i prodotti senza pulsanti "Aggiungi"</li>
+        <li>Cliccando su un prodotto vedono dettagli semplificati (nome, prezzo, descrizione)</li>
+        <li>Se vogliono ordinare, possono cliccare "Vai al Menu Completo"</li>
+      </ul>
+    </div>
+  </div>
 
-        // Genera automaticamente al caricamento
-        window.onload = () => generateQR();
-    </script>
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    // URL del tuo sito Vercel - porta alla home page con la welcome modal
+    const VIEW_MODE_URL = 'https://noel-fest.vercel.app/';
+    
+    let qrcodeInstance = null;
+
+    function generateQR(size = 256) {
+      // Rimuovi il QR esistente se presente
+      const qrcodeDiv = document.getElementById('qrcode');
+      qrcodeDiv.innerHTML = '';
+
+      // Genera nuovo QR
+      qrcodeInstance = new QRCode(qrcodeDiv, {
+        text: VIEW_MODE_URL,
+        width: size,
+        height: size,
+        colorDark: '#8B0000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      // Mostra l'URL
+      document.getElementById('urlDisplay').textContent = VIEW_MODE_URL;
+    }
+
+    function updateQRSize() {
+      const size = parseInt(document.getElementById('qrSize').value);
+      if (size >= 128 && size <= 512) {
+        generateQR(size);
+      } else {
+        alert('Inserisci una dimensione tra 128 e 512 pixel');
+      }
+    }
+
+    function downloadQR() {
+      const canvas = document.querySelector('#qrcode canvas');
+      if (canvas) {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = 'qr-visualizza-menu-noelfest.png';
+        link.href = url;
+        link.click();
+      }
+    }
+
+    function printQR() {
+      const qrSection = document.querySelector('.qr-section').innerHTML;
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Stampa QR Code - Visualizza Menù</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 40px;
+            }
+            h1 {
+              color: #8B0000;
+              margin-bottom: 20px;
+            }
+            #qrcode {
+              margin: 20px auto;
+            }
+            .url-display {
+              margin-top: 20px;
+              padding: 10px;
+              border: 2px solid #8B0000;
+              display: inline-block;
+              word-break: break-all;
+            }
+            .size-controls {
+              display: none;
+            }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>👁️ Scansiona per Visualizzare il Menù</h1>
+          <p>Noel Fest - Menu Completo</p>
+          ${qrSection}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
+
+    function copyURL() {
+      navigator.clipboard.writeText(VIEW_MODE_URL).then(() => {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Copiato!';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      }).catch(err => {
+        alert('Errore nella copia: ' + err);
+      });
+    }
+
+    // Genera il QR al caricamento della pagina
+    window.onload = () => {
+      generateQR(256);
+    };
+  </script>
 </body>
 </html>
