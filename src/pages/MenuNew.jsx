@@ -122,7 +122,8 @@ function MenuNew() {
     setActiveCategory('panini')
     
     // Se è ordine immediato, continua con email
-    if (orderType === 'immediate' || orderType === 'view_only') {
+    // Se è view_only, NON chiedere email - vai diretto al menu
+    if (orderType === 'immediate') {
       setShowEmailModal(true)
     }
   }
@@ -134,9 +135,29 @@ function MenuNew() {
     setActiveCategory('antipasti')
     
     // Se è ordine immediato, continua con email
-    if (orderType === 'immediate' || orderType === 'view_only') {
+    // Se è view_only, NON chiedere email - vai diretto al menu
+    if (orderType === 'immediate') {
       setShowEmailModal(true)
     }
+  }
+
+  const handleBackToStart = () => {
+    // Reset completo dello stato
+    setCharacter(null)
+    setEmail('')
+    setNumPeople(1)
+    setOrderType(null)
+    setMenuType(null)
+    setSessionData(null)
+    setActiveCategory('antipasti')
+    setCart([])
+    setShowCart(false)
+    setShowWelcomeModal(true)
+    
+    // Pulisci localStorage
+    localStorage.removeItem('character')
+    localStorage.removeItem('email')
+    localStorage.removeItem('orderType')
   }
 
   const handleSessionConfirm = (session) => {
@@ -301,8 +322,8 @@ function MenuNew() {
         
         <div className="header-right">
           {orderType === 'view_only' ? (
-            <button className="view-mode-btn" onClick={() => window.location.href = '/'}>
-              <span>📋 Vai al Menu Completo</span>
+            <button className="view-mode-btn" onClick={handleBackToStart}>
+              <span>⬅️ Torna Indietro</span>
             </button>
           ) : (
             <button className="cart-button" onClick={() => setShowCart(true)}>
