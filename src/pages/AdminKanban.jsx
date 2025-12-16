@@ -56,15 +56,9 @@ export default function AdminKanban({ user, onLogout }) {
       Notification.requestPermission()
     }
     
-    // Auto-refresh orders ogni 15 secondi per sicurezza (backup real-time)
+    // Auto-refresh orders every hour to show scheduled orders at the right time
     const refreshInterval = setInterval(() => {
-      console.log('🔄 Auto-refresh: ricarico ordini')
-      loadOrders()
-    }, 15000) // 15 secondi
-    
-    // Auto-refresh per ordini programmati ogni ora
-    const scheduledRefresh = setInterval(() => {
-      console.log('⏰ Scheduled-refresh: controllo ordini programmati')
+      console.log('⏰ Auto-refresh: ricarico ordini programmati')
       loadOrders()
     }, 60 * 60 * 1000) // Every hour
     
@@ -72,7 +66,6 @@ export default function AdminKanban({ user, onLogout }) {
     return () => {
       if (cleanup) cleanup()
       clearInterval(refreshInterval)
-      clearInterval(scheduledRefresh)
     }
   }, [])
 

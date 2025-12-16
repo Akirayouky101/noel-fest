@@ -69,12 +69,6 @@ export default function OrdersDashboard() {
         console.log('📡 OrdersDashboard subscription:', status)
       })
     
-    // Refresh forzato ogni 10 secondi per sicurezza
-    const refreshInterval = setInterval(() => {
-      console.log('🔄 Refresh automatico ordini...')
-      loadOrders()
-    }, 10000) // 10 secondi
-    
     // Polling per posti/prenotazioni: ogni 30 secondi
     const seatsInterval = setInterval(() => {
       loadAvailableSeats()
@@ -84,7 +78,6 @@ export default function OrdersDashboard() {
     
     return () => {
       channel.unsubscribe()
-      clearInterval(refreshInterval)
       clearInterval(seatsInterval)
     }
   }, [])
