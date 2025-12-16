@@ -229,7 +229,10 @@ export default function AdminKanban({ user, onLogout }) {
   // Load reservations from Supabase
   const loadReservations = async () => {
     try {
-      // 1. Carica le prenotazioni attive (al tavolo)
+      // Data di oggi in formato YYYY-MM-DD
+      const today = new Date().toISOString().split('T')[0]
+      
+      // 1. Carica le prenotazioni attive (al tavolo ADESSO)
       const { data: activeRes, error: activeError } = await supabase
         .from('active_reservations')
         .select('*')
@@ -237,19 +240,22 @@ export default function AdminKanban({ user, onLogout }) {
       
       if (activeError) throw activeError
       
-      // 2. Carica gli ordini programmati (future reservations)
+      // 2. Carica gli ordini programmati (future reservations) - SOLO DA OGGI IN POI
       const { data: scheduledOrders, error: scheduledError } = await supabase
         .from('orders')
         .select('*')
         .in('session_type', ['lunch', 'dinner'])
         .neq('status', 'cancelled')
+        .gte('session_date', today) // Solo da oggi in poi
         .order('session_date', { ascending: true })
         .order('session_time', { ascending: true })
       
       if (scheduledError) throw scheduledError
       
+      console.log(`📅 Query prenotazioni >= ${today}:`, scheduledOrders?.length || 0)
+      
       // 3. Trasforma gli ordini programmati nel formato reservation-card
-      const transformedScheduled = scheduledOrders.map(order => ({
+      const transformedScheduled = (scheduledOrders || []).map(order => ({
         id: `order-${order.id}`,
         character_name: order.character_name,
         num_people: order.num_people,
@@ -261,15 +267,15 @@ export default function AdminKanban({ user, onLogout }) {
       }))
       
       // 4. Combina e rimuovi duplicati (stessa persona presente in entrambe le liste)
-      const activeCharacters = new Set(activeRes.map(r => r.character_name))
+      const activeCharacters = new Set((activeRes || []).map(r => r.character_name))
       const uniqueScheduled = transformedScheduled.filter(s => !activeCharacters.has(s.character_name))
       
       // 5. Combina le liste: prima attive, poi programmate
       const combined = [...(activeRes || []), ...uniqueScheduled]
       
-      console.log('📅 Prenotazioni attive:', activeRes?.length || 0)
-      console.log('🗓️ Ordini programmati:', uniqueScheduled.length)
-      console.log('📊 Totale prenotazioni:', combined.length)
+      console.log('📅 Prenotazioni attive al tavolo:', activeRes?.length || 0)
+      console.log('🗓️ Ordini programmati (da oggi):', uniqueScheduled.length)
+      console.log('📊 Totale prenotazioni visibili:', combined.length)
       
       setReservations(combined)
     } catch (error) {
@@ -891,18 +897,20 @@ export default function AdminKanban({ user, onLogout }) {
               console.log('📦 allOrders disponibili:', allOrders.length)
               
               // Cerco tra TUTTI gli ordini (anche quelli programmati non ancora visibili)
+              // NOTE: allOrders ha characterName (camelCase), reservation ha character_name (snake_case)
               const characterOrders = allOrders.filter(
-                order => order.characterName === characterName
+                order => order.characterName === characterName || order.character_name === characterName
               )
               
               console.log('📋 Ordini trovati per', characterName, ':', characterOrders.length)
               
               if (characterOrders.length > 0) {
-                console.log('✅ Apro modale con ordini:', characterOrders)
+                console.log('✅ Apro modale con', characterOrders.length, 'ordini')
                 setSelectedCharacter(characterName)
                 setSelectedOrders(characterOrders)
               } else {
-                console.log('⚠️ Nessun ordine trovato')
+                console.log('⚠️ Nessun ordine trovato per', characterName)
+                console.log('   Verifica che il nome sia corretto e che ci siano ordini non cancellati')
                 toast.info(`Nessun ordine trovato per ${characterName}`)
               }
             }}
