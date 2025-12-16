@@ -36,6 +36,7 @@ function MenuNew() {
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [showSeatsFullModal, setShowSeatsFullModal] = useState(false)
   const [showMenuTypeModal, setShowMenuTypeModal] = useState(false)
+  const [showCopertoWarningModal, setShowCopertoWarningModal] = useState(false)
   const [activeCategory, setActiveCategory] = useState('antipasti')
   const [cart, setCart] = useState([])
   const [showCart, setShowCart] = useState(false)
@@ -107,21 +108,35 @@ function MenuNew() {
   }
   
   const handleMenuTypeSelection = (type) => {
-    setMenuType(type)
     setShowMenuTypeModal(false)
     
-    // Imposta categoria iniziale
-    if (type === 'street') {
-      setActiveCategory('panini')
-    } else {
-      setActiveCategory('antipasti')
+    // Se è Menù Cucina, mostra avviso coperto PRIMA di continuare
+    if (type === 'cucina') {
+      setMenuType(type)
+      setShowCopertoWarningModal(true)
+      return
     }
     
+    // Street Food: continua normalmente
+    setMenuType(type)
+    setActiveCategory('panini')
+    
     // Se è ordine immediato, continua con email
-    if (orderType === 'immediate') {
+    if (orderType === 'immediate' || orderType === 'view_only') {
       setShowEmailModal(true)
     }
-    // Se è view_only, vai diretto al menù (già tutto impostato)
+  }
+  
+  const handleCopertoWarningClose = () => {
+    setShowCopertoWarningModal(false)
+    
+    // Imposta categoria iniziale per Menù Cucina
+    setActiveCategory('antipasti')
+    
+    // Se è ordine immediato, continua con email
+    if (orderType === 'immediate' || orderType === 'view_only') {
+      setShowEmailModal(true)
+    }
   }
 
   const handleSessionConfirm = (session) => {
@@ -249,6 +264,13 @@ function MenuNew() {
   if (showMenuTypeModal) {
     return (
       <MenuTypeModal onSelect={handleMenuTypeSelection} />
+    )
+  }
+  
+  // Modale avviso coperto
+  if (showCopertoWarningModal) {
+    return (
+      <CopertoWarningModal onClose={handleCopertoWarningClose} />
     )
   }
   
@@ -507,6 +529,25 @@ function EmailModal({ character, orderType, onSubmit }) {
             Continua →
           </button>
         </form>
+      </div>
+    </div>
+  )
+}
+
+function CopertoWarningModal({ onClose }) {
+  return (
+    <div className="coperto-warning-overlay">
+      <div className="coperto-warning-modal">
+        <div className="coperto-warning-icon">ℹ️</div>
+        <h2>Menù Cucina</h2>
+        <div className="coperto-warning-content">
+          <p>Il costo del coperto è di</p>
+          <div className="coperto-price">€1,50</div>
+          <p>a persona</p>
+        </div>
+        <button className="coperto-confirm-btn" onClick={onClose}>
+          Ho Capito, Continua
+        </button>
       </div>
     </div>
   )

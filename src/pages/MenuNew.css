@@ -712,6 +712,84 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Coperto Warning Modal */
+.coperto-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.coperto-warning-modal {
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.98), rgba(205, 92, 92, 0.98));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 2px solid #FFD700;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+.coperto-warning-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.coperto-warning-modal h2 {
+  font-size: 2rem;
+  color: #FFD700;
+  margin-bottom: 24px;
+}
+
+.coperto-warning-content {
+  margin: 24px 0;
+}
+
+.coperto-warning-content p {
+  color: white;
+  font-size: 1.2rem;
+  margin: 8px 0;
+}
+
+.coperto-price {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #FFD700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  margin: 16px 0;
+}
+
+.coperto-confirm-btn {
+  width: 100%;
+  padding: 16px;
+  background: rgba(255, 215, 0, 0.2);
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 24px;
+}
+
+.coperto-confirm-btn:hover {
+  background: rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
 /* ========================================
    RESPONSIVE
    ======================================== */

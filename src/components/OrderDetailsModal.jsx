@@ -26,18 +26,27 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
 
   const totalOrders = orders.length
   
-  // FIXED: Il numero di persone è lo stesso in tutti gli ordini dello stesso character
-  const totalPeople = orders[0]?.numPeople || 0
+  // FIXED: Prendi il numero di persone MAX (in caso ci siano discrepanze)
+  const totalPeople = Math.max(...orders.map(o => o.numPeople || 0))
   
-  // FIXED: Calcola totale corretto - il coperto è calcolato UNA VOLTA per sessione (lunch/dinner)
-  // Ogni ordine ha items + coperto nel total, quindi devo sottrarre il coperto duplicato
+  // FIXED: Calcola totale corretto - il coperto è calcolato UNA VOLTA per sessione
+  // Sessione = stesso giorno + stesso tipo (immediate, lunch, dinner)
   
-  // Raggruppa ordini per sessione (immediate, lunch, dinner + data)
+  // Raggruppa ordini per sessione: stesso giorno + stesso sessionType
   const sessionGroups = {}
   orders.forEach(order => {
-    const sessionKey = order.sessionType === 'immediate' 
-      ? `immediate-${order.timestamp}` 
-      : `${order.sessionType}-${order.sessionDate || ''}`
+    // Per immediate: usa la data (stesso giorno = stessa sessione)
+    // Per lunch/dinner: usa sessionType + sessionDate
+    let sessionKey
+    
+    if (order.sessionType === 'immediate') {
+      // Estrai solo la data dal timestamp (YYYY-MM-DD)
+      const orderDate = new Date(order.timestamp).toISOString().split('T')[0]
+      sessionKey = `immediate-${orderDate}`
+    } else {
+      // Lunch/Dinner: usa tipo + data
+      sessionKey = `${order.sessionType}-${order.sessionDate || ''}`
+    }
     
     if (!sessionGroups[sessionKey]) {
       sessionGroups[sessionKey] = []
