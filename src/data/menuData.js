@@ -273,42 +273,34 @@ export const menuData = {
       price: 2.50,
       description: 'Vino rosso o bianco al bicchiere',
       ingredients: 'Vino',
-      allergens: ['Solfiti']
+      allergens: []
     },
     {
       id: 'bev2',
       name: 'Birra bionda/rossa alla spina',
       price: 4.50,
-      description: 'Birra artigianale alla spina media',
+      description: 'Birra artigianale alla spina',
       ingredients: 'Malto d\'orzo, luppolo, acqua',
       allergens: ['Glutine']
     },
     {
       id: 'bev3',
-      name: 'Birra aromatizzata al Torcetto ESCLUSIVA',
-      price: 3.50,
-      description: 'Birra speciale aromatizzata',
-      ingredients: 'Birra, aromi naturali',
-      allergens: ['Glutine']
-    },
-    {
-      id: 'bev4',
-      name: 'Bottiglietta acqua 1/2 litro',
+      name: 'Bottiglietta d\'acqua 1/2 litro',
       price: 1.00,
       description: 'Acqua minerale naturale',
       ingredients: 'Acqua minerale',
       allergens: []
     },
     {
-      id: 'bev5',
+      id: 'bev4',
       name: '1 litro di vino bianco/rosso in caraffa',
       price: 8.00,
       description: 'Caraffa di vino della casa',
       ingredients: 'Vino',
-      allergens: ['Solfiti']
+      allergens: []
     },
     {
-      id: 'bev6',
+      id: 'bev5',
       name: 'Bibite in lattina',
       price: 2.50,
       description: 'Bevande analcoliche varie',
@@ -316,67 +308,11 @@ export const menuData = {
       allergens: []
     },
     {
-      id: 'bev7',
-      name: 'Spritz',
-      price: 5.00,
-      description: 'Aperitivo Spritz classico',
-      ingredients: 'Prosecco, Aperol, seltz',
-      allergens: ['Solfiti']
-    },
-    {
-      id: 'bev8',
-      name: 'Amari',
-      price: 3.00,
-      description: 'Amaro digestivo',
-      ingredients: 'Alcool, erbe',
-      allergens: []
-    },
-    {
-      id: 'bev9',
-      name: 'Gin Tonic / Gin Lemon',
-      price: 5.00,
-      description: 'Gin con tonica o lemon',
-      ingredients: 'Gin, tonica/lemon',
-      allergens: []
-    },
-    {
-      id: 'bev10',
-      name: 'Shottino al passito',
-      price: 3.00,
-      description: 'Shot di vino passito',
-      ingredients: 'Vino passito',
-      allergens: ['Solfiti']
-    },
-    {
-      id: 'bev11',
-      name: 'Limoncello',
-      price: 3.00,
-      description: 'Liquore di limone',
-      ingredients: 'Alcool, limoni, zucchero',
-      allergens: []
-    },
-    {
-      id: 'bev12',
-      name: 'Tisane',
-      price: 1.50,
-      description: 'Tisane calde varie',
-      ingredients: 'Erbe naturali',
-      allergens: []
-    },
-    {
-      id: 'bev13',
+      id: 'bev6',
       name: 'Caffè',
       price: 1.00,
       description: 'Caffè espresso',
       ingredients: 'Caffè',
-      allergens: []
-    },
-    {
-      id: 'bev14',
-      name: 'Caffè corretto',
-      price: 2.00,
-      description: 'Caffè con liquore',
-      ingredients: 'Caffè, liquore',
       allergens: []
     }
   ],
