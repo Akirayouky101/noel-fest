@@ -229,13 +229,49 @@ export default function AdminKanban({ user, onLogout }) {
   // Load reservations from Supabase
   const loadReservations = async () => {
     try {
-      const { data, error } = await supabase
+      // 1. Carica le prenotazioni attive (al tavolo)
+      const { data: activeRes, error: activeError } = await supabase
         .from('active_reservations')
         .select('*')
         .order('created_at', { ascending: false })
       
-      if (error) throw error
-      setReservations(data || [])
+      if (activeError) throw activeError
+      
+      // 2. Carica gli ordini programmati (future reservations)
+      const { data: scheduledOrders, error: scheduledError } = await supabase
+        .from('orders')
+        .select('*')
+        .in('session_type', ['lunch', 'dinner'])
+        .neq('status', 'cancelled')
+        .order('session_date', { ascending: true })
+        .order('session_time', { ascending: true })
+      
+      if (scheduledError) throw scheduledError
+      
+      // 3. Trasforma gli ordini programmati nel formato reservation-card
+      const transformedScheduled = scheduledOrders.map(order => ({
+        id: `order-${order.id}`,
+        character_name: order.character_name,
+        num_people: order.num_people,
+        created_at: order.timestamp,
+        session_type: order.session_type,
+        session_date: order.session_date,
+        session_time: order.session_time,
+        is_scheduled: true // Flag per distinguerli
+      }))
+      
+      // 4. Combina e rimuovi duplicati (stessa persona presente in entrambe le liste)
+      const activeCharacters = new Set(activeRes.map(r => r.character_name))
+      const uniqueScheduled = transformedScheduled.filter(s => !activeCharacters.has(s.character_name))
+      
+      // 5. Combina le liste: prima attive, poi programmate
+      const combined = [...(activeRes || []), ...uniqueScheduled]
+      
+      console.log('📅 Prenotazioni attive:', activeRes?.length || 0)
+      console.log('🗓️ Ordini programmati:', uniqueScheduled.length)
+      console.log('📊 Totale prenotazioni:', combined.length)
+      
+      setReservations(combined)
     } catch (error) {
       console.error('Errore caricamento prenotazioni:', error)
     }
@@ -1125,24 +1161,37 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
           {reservations.map((reservation) => (
             <div 
               key={reservation.id} 
-              className="reservation-card clickable"
+              className={`reservation-card clickable ${reservation.is_scheduled ? 'scheduled' : 'active'}`}
               onClick={() => onReservationClick(reservation.character_name)}
             >
               <div className="reservation-character">
-                🎅 {reservation.character_name}
+                {reservation.is_scheduled ? '📅' : '🎅'} {reservation.character_name}
               </div>
               <div className="reservation-details">
                 <div className="reservation-info">
                   <Users size={18} />
                   <span>{reservation.num_people} {reservation.num_people === 1 ? 'persona' : 'persone'}</span>
                 </div>
-                <div className="reservation-info">
-                  <Clock size={18} />
-                  <span>{formatDate(reservation.created_at)}</span>
-                </div>
+                {reservation.is_scheduled ? (
+                  <>
+                    <div className="reservation-info">
+                      <CalendarDays size={18} />
+                      <span>{reservation.session_date}</span>
+                    </div>
+                    <div className="reservation-info">
+                      <Clock size={18} />
+                      <span>{reservation.session_time} ({reservation.session_type === 'lunch' ? 'Pranzo' : 'Cena'})</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="reservation-info">
+                    <Clock size={18} />
+                    <span>{formatDate(reservation.created_at)}</span>
+                  </div>
+                )}
               </div>
               <div className="reservation-hint">
-                👆 Clicca per vedere gli ordini
+                {reservation.is_scheduled ? '⏰ Prenotazione futura' : '👆 Clicca per vedere gli ordini'}
               </div>
             </div>
           ))}
