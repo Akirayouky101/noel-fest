@@ -423,12 +423,19 @@ export default function AdminKanban({ user, onLogout }) {
 
   // Get orders by status - RAGGRUPPATI per character per evitare duplicati
   const getOrdersByStatus = (status) => {
+    // Safety check: se filteredOrders non è ancora inizializzato
+    if (!filteredOrders || !Array.isArray(filteredOrders)) {
+      return []
+    }
+    
     const ordersForStatus = filteredOrders.filter(order => order.status === status)
     
     // Raggruppa per characterName
     const groupedByCharacter = {}
     ordersForStatus.forEach(order => {
       const char = order.characterName
+      if (!char) return // Skip se non ha characterName
+      
       if (!groupedByCharacter[char]) {
         groupedByCharacter[char] = {
           id: order.id, // Usa l'ID del primo ordine come key
@@ -934,7 +941,10 @@ export default function AdminKanban({ user, onLogout }) {
 }
 
 // Kanban Column Component - SENZA DRAG AND DROP
-function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick, onStatusChange }) {
+function KanbanColumn({ status, title, icon, orders = [], onDelete, onCardClick, onStatusChange }) {
+  // Safety check
+  const safeOrders = Array.isArray(orders) ? orders : []
+  
   return (
     <div className={`kanban-column ${status}`}>
       <div className="column-header">
@@ -942,17 +952,17 @@ function KanbanColumn({ status, title, icon, orders, onDelete, onCardClick, onSt
           <span className="column-icon">{icon}</span>
           {title}
         </div>
-        <span className="column-count">{orders.length}</span>
+        <span className="column-count">{safeOrders.length}</span>
       </div>
 
       <div className="column-content">
-        {orders.length === 0 ? (
+        {safeOrders.length === 0 ? (
           <div className="column-empty">
             <span className="icon">{icon}</span>
             <p>Nessun ordine</p>
           </div>
         ) : (
-          orders.map((order) => (
+          safeOrders.map((order) => (
             <OrderCard
               key={order.id}
               order={order}
