@@ -326,10 +326,16 @@ function MenuNew() {
               <span>⬅️ Torna Indietro</span>
             </button>
           ) : (
-            <button className="cart-button" onClick={() => setShowCart(true)}>
-              <span className="cart-icon">🛒</span>
-              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-            </button>
+            <>
+              <button className="cart-button" onClick={() => setShowCart(true)}>
+                <span className="cart-icon">🛒</span>
+                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              </button>
+              <button className="logout-btn" onClick={handleBackToStart}>
+                <span>🚪</span>
+                <span>Esci</span>
+              </button>
+            </>
           )}
         </div>
       </header>
