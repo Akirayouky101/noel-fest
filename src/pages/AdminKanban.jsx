@@ -56,9 +56,15 @@ export default function AdminKanban({ user, onLogout }) {
       Notification.requestPermission()
     }
     
-    // Auto-refresh orders every hour to show scheduled orders at the right time
+    // Auto-refresh orders ogni 15 secondi per sicurezza (backup real-time)
     const refreshInterval = setInterval(() => {
-      console.log('⏰ Auto-refresh: ricarico ordini programmati')
+      console.log('🔄 Auto-refresh: ricarico ordini')
+      loadOrders()
+    }, 15000) // 15 secondi
+    
+    // Auto-refresh per ordini programmati ogni ora
+    const scheduledRefresh = setInterval(() => {
+      console.log('⏰ Scheduled-refresh: controllo ordini programmati')
       loadOrders()
     }, 60 * 60 * 1000) // Every hour
     
@@ -66,6 +72,7 @@ export default function AdminKanban({ user, onLogout }) {
     return () => {
       if (cleanup) cleanup()
       clearInterval(refreshInterval)
+      clearInterval(scheduledRefresh)
     }
   }, [])
 
@@ -421,9 +428,41 @@ export default function AdminKanban({ user, onLogout }) {
     }
   }
 
-  // Get orders by status
+  // Get orders by status - RAGGRUPPATI per character per evitare duplicati
   const getOrdersByStatus = (status) => {
-    return filteredOrders.filter(order => order.status === status)
+    const ordersForStatus = filteredOrders.filter(order => order.status === status)
+    
+    // Raggruppa per characterName
+    const groupedByCharacter = {}
+    ordersForStatus.forEach(order => {
+      const char = order.characterName
+      if (!groupedByCharacter[char]) {
+        groupedByCharacter[char] = {
+          id: order.id, // Usa l'ID del primo ordine come key
+          characterName: char,
+          orders: [], // Array di tutti gli ordini
+          numPeople: 0,
+          total: 0,
+          status: order.status,
+          timestamp: order.timestamp,
+          sessionType: order.sessionType,
+          sessionDate: order.sessionDate,
+          sessionTime: order.sessionTime
+        }
+      }
+      
+      // Aggiungi ordine al gruppo
+      groupedByCharacter[char].orders.push(order)
+      groupedByCharacter[char].numPeople += order.numPeople || 0
+      groupedByCharacter[char].total += parseFloat(order.total || 0)
+      
+      // Usa il timestamp più recente
+      if (new Date(order.timestamp) > new Date(groupedByCharacter[char].timestamp)) {
+        groupedByCharacter[char].timestamp = order.timestamp
+      }
+    })
+    
+    return Object.values(groupedByCharacter)
   }
 
   // Export to CSV
@@ -499,9 +538,8 @@ export default function AdminKanban({ user, onLogout }) {
 
   // Handle card click - open modal with all orders from same character
   const handleCardClick = (clickedOrder) => {
-    const characterOrders = orders.filter(
-      order => order.characterName === clickedOrder.characterName
-    )
+    // Il clickedOrder ora contiene già tutti gli ordini nel campo "orders"
+    const characterOrders = clickedOrder.orders || [clickedOrder]
     setSelectedCharacter(clickedOrder.characterName)
     setSelectedOrders(characterOrders)
   }
