@@ -1,6 +1,11 @@
-import { X, Clock, Users, Calendar, Package } from 'lucide-react'
+import { X, Clock, Users, Calendar, Package, CheckCircle } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
 
 export default function OrderDetailsModal({ characterName, orders, onClose }) {
+  const [isCompleting, setIsCompleting] = useState(false)
+  
   if (!orders || orders.length === 0) return null
 
   const formatDate = (timestamp) => {
@@ -73,6 +78,42 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
   })
   
   const numberOfSessions = Object.keys(sessionGroups).length
+
+  const handleCompleteAllOrders = async () => {
+    if (!window.confirm(`Completare tutti gli ${totalOrders} ordini di ${characterName}?`)) {
+      return
+    }
+    
+    setIsCompleting(true)
+    
+    try {
+      // Aggiorna tutti gli ordini a "completed"
+      const orderIds = orders.map(o => o.id)
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'completed' })
+        .in('id', orderIds)
+      
+      if (error) throw error
+      
+      toast.success(`✅ ${totalOrders} ordini completati!`)
+      
+      // Chiudi modale e ricarica
+      setTimeout(() => {
+        onClose()
+        window.location.reload()
+      }, 500)
+    } catch (error) {
+      console.error('Errore completamento ordini:', error)
+      toast.error('Errore nel completamento')
+    } finally {
+      setIsCompleting(false)
+    }
+  }
+
+  // Controlla se ci sono ordini ancora pending
+  const hasPendingOrders = orders.some(o => o.status === 'pending')
 
   return (
     <div className="order-details-modal-overlay" onClick={onClose}>
@@ -167,6 +208,20 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
             </div>
           ))}
         </div>
+
+        {/* Footer - Azioni */}
+        {hasPendingOrders && (
+          <div className="modal-footer">
+            <button 
+              className="modal-complete-btn"
+              onClick={handleCompleteAllOrders}
+              disabled={isCompleting}
+            >
+              <CheckCircle size={20} />
+              {isCompleting ? 'Completamento...' : `Completa Tutti gli Ordini (${totalOrders})`}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

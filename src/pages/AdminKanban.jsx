@@ -645,13 +645,14 @@ export default function AdminKanban({ user, onLogout }) {
   return (
     <div className="admin-page">
       <Toaster 
-        position="top-right"
+        position="bottom-right"
         toastOptions={{
           style: {
             background: '#1e293b',
             color: '#fff',
             border: '1px solid rgba(255, 215, 0, 0.3)'
-          }
+          },
+          duration: 3000
         }}
       />
 
@@ -748,17 +749,17 @@ export default function AdminKanban({ user, onLogout }) {
               </div>
             </div>
 
-            <div className="stat-card completed">
+            <div className="stat-card total">
               <div className="stat-card-content">
-                <h3>✅ Completati</h3>
-                <p className="stat-value">{stats.completed}</p>
+                <h3>📦 Totale Ordini</h3>
+                <p className="stat-value">{stats.total}</p>
               </div>
             </div>
 
-            <div className="stat-card total">
+            <div className="stat-card completed">
               <div className="stat-card-content">
-                <h3>📦 Totale</h3>
-                <p className="stat-value">{stats.total}</p>
+                <h3>✅ Completati Oggi</h3>
+                <p className="stat-value">{stats.completed}</p>
               </div>
             </div>
 
@@ -857,25 +858,14 @@ export default function AdminKanban({ user, onLogout }) {
 
         {/* Content Rendering */}
         {activeTab === 'kanban' ? (
-          /* Kanban Board - SOLO 2 COLONNE: In Attesa e Completati */
+          /* Kanban Board - SOLO 1 COLONNA: In Attesa */
           <div className="kanban-board">
-            {/* Colonna Pending */}
+            {/* Colonna Pending - UNICA */}
             <KanbanColumn
               status="pending"
               title="In Attesa"
               icon="⏳"
               orders={getOrdersByStatus('pending')}
-              onDelete={handleDeleteOrder}
-              onCardClick={handleCardClick}
-              onStatusChange={handleStatusChange}
-            />
-
-            {/* Colonna Completed */}
-            <KanbanColumn
-              status="completed"
-              title="Completati"
-              icon="✅"
-              orders={getOrdersByStatus('completed')}
               onDelete={handleDeleteOrder}
               onCardClick={handleCardClick}
               onStatusChange={handleStatusChange}
@@ -1026,16 +1016,6 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
           </div>
           <div className="card-actions">
             <button
-              className="card-action-btn status-change"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowStatusMenu(!showStatusMenu)
-              }}
-              title="Cambia stato"
-            >
-              <ChevronDown size={16} />
-            </button>
-            <button
               className="card-action-btn delete"
               onClick={(e) => {
                 e.stopPropagation()
@@ -1047,25 +1027,6 @@ function OrderCard({ order, onDelete, onClick, onStatusChange }) {
             </button>
           </div>
         </div>
-
-        {showStatusMenu && (
-          <div className="status-menu">
-            <button
-              className="status-option pending"
-              onClick={() => handleStatusChange('pending')}
-              disabled={order.status === 'pending'}
-            >
-              ⏳ In Attesa
-            </button>
-            <button
-              className="status-option completed"
-              onClick={() => handleStatusChange('completed')}
-              disabled={order.status === 'completed'}
-            >
-              ✅ Completato
-            </button>
-          </div>
-        )}
 
         <div className="card-quick-info">
           <span className="quick-total">€{order.total?.toFixed(2) || '0.00'}</span>
