@@ -3,7 +3,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Trash2, Search,
-  Filter, Download, Calendar, X, BarChart3, LayoutGrid, LogOut,
+  Filter, Calendar, X, BarChart3, LayoutGrid, LogOut,
   ChevronDown, AlertTriangle, Armchair, CalendarDays
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -147,31 +147,22 @@ export default function AdminKanban({ user, onLogout }) {
       
       setAllOrders(allActiveOrders)
       
-      // Filter out cancelled orders and orders not yet ready to be shown
-      const visibleOrders = allActiveOrders.filter(order => {
-        // Ordini immediati sono sempre visibili
-        if (order.sessionType === 'immediate') return true
-        
-        // Ordini con prenotazione: controllare data e ora
-        if (order.sessionType === 'lunch' || order.sessionType === 'dinner') {
-          return shouldShowScheduledOrder(order)
-        }
-        
-        return true
-      })
+      // KANBAN: solo ordini IMMEDIATI (at_register)
+      // PRENOTAZIONI: gestisce tutti gli ordini programmati (lunch/dinner)
+      const immediateOrders = allActiveOrders.filter(order => 
+        !order.sessionType || order.sessionType === 'immediate'
+      )
       
-      console.log('👁️ Ordini visibili ora:', visibleOrders.length)
-      console.log('⏰ Ordini programmati per dopo:', allActiveOrders.length - visibleOrders.length)
+      const scheduledOrders = allActiveOrders.filter(order => 
+        order.sessionType === 'lunch' || order.sessionType === 'dinner'
+      )
       
-      setOrders(visibleOrders)
+      console.log('🏃 Ordini immediati (Kanban):', immediateOrders.length)
+      console.log('📅 Ordini programmati (Prenotazioni):', scheduledOrders.length)
       
-      // Messaggio più chiaro
-      const scheduledCount = allActiveOrders.length - visibleOrders.length
-      if (scheduledCount > 0) {
-        toast.success(`✅ ${visibleOrders.length} ordini visibili | ⏰ ${scheduledCount} programmati`)
-      } else {
-        toast.success(`✅ ${visibleOrders.length} ordini caricati`)
-      }
+      setOrders(immediateOrders)
+      
+      toast.success(`✅ ${immediateOrders.length} ordini immediati | 📅 ${scheduledOrders.length} prenotazioni`)
     } catch (error) {
       console.error('Errore caricamento ordini:', error)
       toast.error('Errore nel caricamento degli ordini')
@@ -493,38 +484,6 @@ export default function AdminKanban({ user, onLogout }) {
     return Object.values(groupedByCharacter)
   }
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['ID', 'Character', 'Email', 'Persone', 'Tipo', 'Sessione', 'Articoli', 'Note', 'Totale', 'Status', 'Data']
-    
-    const rows = filteredOrders.map(order => [
-      order.id,
-      order.characterName,
-      order.email,
-      order.numPeople || 0,
-      order.orderType || '',
-      order.sessionType || '',
-      (order.items || []).map(i => `${i.name} x${i.quantity}`).join('; '),
-      order.notes || '',
-      (order.total || 0).toFixed(2),
-      order.status,
-      new Date(order.timestamp).toLocaleString('it-IT')
-    ])
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `ordini_noel_fest_${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
-    
-    toast.success('CSV esportato con successo!')
-  }
-
   // Clear filters
   const clearFilters = () => {
     setSearchTerm('')
@@ -779,15 +738,6 @@ export default function AdminKanban({ user, onLogout }) {
                   [searchTerm, sessionFilter !== 'all', dateFilter !== 'all'].filter(Boolean).length
                 }</span>
               )}
-            </button>
-
-            <button 
-              className="export-btn"
-              onClick={exportToCSV}
-              title="Esporta in CSV"
-            >
-              <Download size={18} />
-              <span>Esporta CSV</span>
             </button>
           </div>
 
