@@ -2,7 +2,7 @@ export const menuData = {
   antipasti: [
     {
       id: 'ant1',
-      name: 'Gran tagliere misto salumi e formaggi',
+      name: 'Gran Tagliere Misto salumi e formaggi',
       price: 15.00,
       description: 'Selezione di salumi e formaggi tipici',
       ingredients: 'Salumi misti, formaggi locali',
@@ -10,7 +10,7 @@ export const menuData = {
     },
     {
       id: 'ant2',
-      name: 'Bagna cauda con verdure',
+      name: 'Bagna Cauda con verdure',
       price: 7.00,
       description: 'Tradizionale salsa piemontese con verdure fresche',
       ingredients: 'Acciughe, aglio, olio, verdure di stagione',
@@ -18,7 +18,7 @@ export const menuData = {
     },
     {
       id: 'ant3',
-      name: 'Sfogliatine alle verdure',
+      name: 'Sfogliatine con verdure',
       price: 4.50,
       description: 'Sfoglie croccanti ripiene di verdure',
       ingredients: 'Pasta sfoglia, verdure miste',
@@ -64,17 +64,17 @@ export const menuData = {
   secondi: [
     {
       id: 'sec1',
-      name: 'Stinchetto di maiale con crauti',
-      price: 8.50,
+      name: 'Stinco di maiale con crauti',
+      price: 9.00,
       description: 'Stinco arrosto con crauti tradizionali',
-      ingredients: 'Stinchetto di maiale, crauti',
+      ingredients: 'Stinco di maiale, crauti, spezie',
       allergens: []
     },
     {
       id: 'sec2',
       name: 'Merluzzo panna e cipolla',
-      price: 5.00,
-      description: 'Filetto di merluzzo in cremosa salsa',
+      price: 8.50,
+      description: 'Merluzzo in salsa cremosa con cipolla',
       ingredients: 'Merluzzo, panna, cipolla',
       allergens: ['Pesce', 'Lattosio']
     },
@@ -91,7 +91,7 @@ export const menuData = {
   contorni: [
     {
       id: 'con1',
-      name: 'Patatine fritte',
+      name: 'Patatine Fritte',
       price: 4.50,
       description: 'Patatine dorate e croccanti',
       ingredients: 'Patate, olio',
@@ -102,10 +102,10 @@ export const menuData = {
   panini: [
     {
       id: 'pan1',
-      name: 'Panino prosciutto',
+      name: 'Panino Prosciutto',
       price: 4.00,
-      description: 'Panino con prosciutto cotto',
-      ingredients: 'Pane, prosciutto cotto',
+      description: 'Panino con prosciutto',
+      ingredients: 'Pane, prosciutto',
       allergens: ['Glutine']
     },
     {
@@ -120,9 +120,9 @@ export const menuData = {
       id: 'pan3',
       name: 'Panino alle acciughe',
       price: 5.50,
-      description: 'Panino con acciughe sott\'olio',
-      ingredients: 'Pane, acciughe',
-      allergens: ['Glutine', 'Pesce']
+      description: 'Panino con acciughe',
+      ingredients: 'Pane, acciughe, burro',
+      allergens: ['Glutine', 'Pesce', 'Lattosio']
     },
     {
       id: 'pan4',
@@ -134,7 +134,7 @@ export const menuData = {
     },
     {
       id: 'pan5',
-      name: 'Aggiunta formaggio',
+      name: 'Aggiunta di formaggio',
       price: 1.00,
       description: 'Formaggio aggiuntivo per il panino',
       ingredients: 'Formaggio',
@@ -153,11 +153,11 @@ export const menuData = {
     },
     {
       id: 'sf2',
-      name: 'Arancini di riso',
+      name: 'Arancino di riso',
       price: 3.50,
-      description: 'Arancini siciliani ripieni',
-      ingredients: 'Riso, ragù, mozzarella, panatura',
-      allergens: ['Glutine', 'Lattosio']
+      description: 'Arancino siciliano fritto',
+      ingredients: 'Riso, ragù, piselli, pangrattato',
+      allergens: ['Glutine']
     },
     {
       id: 'sf3',
@@ -172,7 +172,7 @@ export const menuData = {
       name: 'Frittella dolce/salata',
       price: 3.00,
       description: 'Frittella a scelta dolce o salata',
-      ingredients: 'Farina, lievito (varia a seconda della versione)',
+      ingredients: 'Farina, lievito, zucchero/sale',
       allergens: ['Glutine']
     }
   ],
@@ -180,17 +180,17 @@ export const menuData = {
   dolci: [
     {
       id: 'dol1',
-      name: 'Strudel alle mele',
-      price: 5.00,
-      description: 'Classico strudel di mele caldo',
+      name: 'Strudel di mele',
+      price: 4.50,
+      description: 'Strudel tradizionale con mele e cannella',
       ingredients: 'Mele, pasta sfoglia, uvetta, cannella',
       allergens: ['Glutine']
     },
     {
       id: 'dol2',
-      name: 'Tortino caldo al cioccolato',
-      price: 5.00,
-      description: 'Tortino con cuore di cioccolato fondente',
+      name: 'Tortino al cioccolato',
+      price: 4.50,
+      description: 'Tortino caldo con cuore di cioccolato fondente',
       ingredients: 'Cioccolato fondente, burro, uova, farina',
       allergens: ['Glutine', 'Uova', 'Lattosio']
     }
@@ -200,16 +200,16 @@ export const menuData = {
     {
       id: 'gol1',
       name: 'Strudel di mele',
-      price: 5.00,
-      description: 'Dolce strudel con mele e cannella',
+      price: 4.50,
+      description: 'Strudel tradizionale con mele e cannella',
       ingredients: 'Mele, pasta sfoglia, uvetta, cannella',
       allergens: ['Glutine']
     },
     {
       id: 'gol2',
       name: 'Tortino caldo al cioccolato',
-      price: 5.00,
-      description: 'Tortino fondente al cioccolato',
+      price: 4.50,
+      description: 'Tortino caldo con cuore di cioccolato fondente',
       ingredients: 'Cioccolato fondente, burro, uova, farina',
       allergens: ['Glutine', 'Uova', 'Lattosio']
     },
@@ -217,17 +217,17 @@ export const menuData = {
       id: 'gol3',
       name: 'Cioccolata calda',
       price: 3.00,
-      description: 'Cioccolata calda densa e cremosa',
-      ingredients: 'Cioccolato, latte, zucchero',
+      description: 'Cioccolata calda cremosa',
+      ingredients: 'Cioccolato, latte, panna',
       allergens: ['Lattosio']
     },
     {
       id: 'gol4',
-      name: 'Vin brulè',
+      name: 'Vin Brulè',
       price: 3.00,
-      description: 'Vino caldo speziato',
+      description: 'Vino caldo speziato natalizio',
       ingredients: 'Vino rosso, spezie, zucchero',
-      allergens: ['Solfiti']
+      allergens: []
     }
   ],
   
