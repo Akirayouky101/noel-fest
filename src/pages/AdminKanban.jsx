@@ -139,8 +139,12 @@ export default function AdminKanban({ user, onLogout }) {
       setLoading(true)
       const data = await getAllOrders()
       
-      // Salva TUTTI gli ordini (anche quelli non ancora visibili)
+      console.log('📦 Ordini totali dal DB:', data.length)
+      
+      // Filtra SOLO ordini attivi (non cancellati)
       const allActiveOrders = data.filter(order => order.status !== 'cancelled')
+      console.log('✅ Ordini attivi (non cancellati):', allActiveOrders.length)
+      
       setAllOrders(allActiveOrders)
       
       // Filter out cancelled orders and orders not yet ready to be shown
@@ -156,9 +160,18 @@ export default function AdminKanban({ user, onLogout }) {
         return true
       })
       
+      console.log('👁️ Ordini visibili ora:', visibleOrders.length)
+      console.log('⏰ Ordini programmati per dopo:', allActiveOrders.length - visibleOrders.length)
+      
       setOrders(visibleOrders)
       
-      toast.success(`${visibleOrders.length} ordini caricati${allActiveOrders.length > visibleOrders.length ? ` (${allActiveOrders.length - visibleOrders.length} programmati per dopo)` : ''}`)
+      // Messaggio più chiaro
+      const scheduledCount = allActiveOrders.length - visibleOrders.length
+      if (scheduledCount > 0) {
+        toast.success(`✅ ${visibleOrders.length} ordini visibili | ⏰ ${scheduledCount} programmati`)
+      } else {
+        toast.success(`✅ ${visibleOrders.length} ordini caricati`)
+      }
     } catch (error) {
       console.error('Errore caricamento ordini:', error)
       toast.error('Errore nel caricamento degli ordini')
