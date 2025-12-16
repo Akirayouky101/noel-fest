@@ -577,6 +577,10 @@ export default function AdminKanban({ user, onLogout }) {
   const closeModal = () => {
     setSelectedCharacter(null)
     setSelectedOrders([])
+    // Ricarica prenotazioni per aggiornare le card con num_people aggiornato
+    loadReservations()
+    // Ricarica anche gli ordini per aggiornare la modale al prossimo click
+    loadOrders()
   }
 
   // Status helpers
@@ -928,6 +932,8 @@ export default function AdminKanban({ user, onLogout }) {
           setShowSeatsManager(false)
           // Ricarica gli ordini per aggiornare num_people modificati
           loadOrders()
+          // Ricarica anche le prenotazioni per aggiornare le card
+          loadReservations()
         }}
         onViewOrders={(characterName) => {
           console.log('👁️ Visualizza ordini per:', characterName)
