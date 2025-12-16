@@ -7,16 +7,20 @@ import { getRandomCharacter } from '../data/characters'
 import { getAvailableSeats, createOrder, createReservation } from '../lib/supabaseAPI'
 import './MenuNew.css'
 
-const categories = [
+const categoriesCucina = [
   { id: 'antipasti', name: 'Antipasti', icon: '🥟' },
   { id: 'primi', name: 'Primi', icon: '🍝' },
   { id: 'secondi', name: 'Secondi', icon: '🍖' },
   { id: 'contorni', name: 'Contorni', icon: '🥗' },
-  { id: 'panini', name: 'Panini', icon: '🥪' },
-  { id: 'streetfood', name: 'Street Food', icon: '🌭' },
   { id: 'dolci', name: 'Dolci', icon: '🍰' },
-  { id: 'golosoni', name: 'Golosoni', icon: '🍩' },
   { id: 'bevande', name: 'Bevande', icon: '🥤' }
+]
+
+const categoriesStreetFood = [
+  { id: 'panini', name: 'Panini', icon: '🥪' },
+  { id: 'fritti', name: 'Fritti', icon: '�' },
+  { id: 'golosoni', name: 'Golosoni', icon: '🍩' },
+  { id: 'bevande_street', name: 'Bevande', icon: '🥤' }
 ]
 
 function MenuNew() {
@@ -24,12 +28,14 @@ function MenuNew() {
   const [email, setEmail] = useState('')
   const [numPeople, setNumPeople] = useState(1)
   const [orderType, setOrderType] = useState(null)
+  const [menuType, setMenuType] = useState(null) // 'cucina' o 'street'
   const [sessionData, setSessionData] = useState(null)
   const [availableSeats, setAvailableSeats] = useState(150)
   const [showWelcomeModal, setShowWelcomeModal] = useState(true)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [showSeatsFullModal, setShowSeatsFullModal] = useState(false)
+  const [showMenuTypeModal, setShowMenuTypeModal] = useState(false)
   const [activeCategory, setActiveCategory] = useState('antipasti')
   const [cart, setCart] = useState([])
   const [showCart, setShowCart] = useState(false)
@@ -39,6 +45,9 @@ function MenuNew() {
 
   const scrollContainerRef = useRef(null)
   const categoryRefs = useRef({})
+  
+  // Categorie dinamiche in base al tipo di menù
+  const categories = menuType === 'street' ? categoriesStreetFood : categoriesCucina
 
   // Carica dati da localStorage
   useEffect(() => {
@@ -77,10 +86,11 @@ function MenuNew() {
       return
     }
     
-    // Modalità solo visualizzazione: salta tutto e vai al menù
+    // Modalità solo visualizzazione: salta tutto e vai al menù cucina
     if (type === 'view_only') {
       setCharacter('Visitatore')
       setOrderType('view_only')
+      setMenuType('cucina')
       setShowWelcomeModal(false)
       return
     }
@@ -89,8 +99,22 @@ function MenuNew() {
     setCharacter(newCharacter)
     setOrderType(type)
     setShowWelcomeModal(false)
+    setShowMenuTypeModal(true) // Mostra modal selezione menù
+  }
+  
+  const handleMenuTypeSelection = (type) => {
+    setMenuType(type)
+    setShowMenuTypeModal(false)
     
-    if (type === 'at_register') {
+    // Imposta categoria iniziale in base al tipo di menù
+    if (type === 'street') {
+      setActiveCategory('panini')
+    } else {
+      setActiveCategory('antipasti')
+    }
+    
+    // Continua il flusso normale
+    if (orderType === 'at_register') {
       setShowSessionModal(true)
     } else {
       setShowEmailModal(true)
@@ -218,6 +242,13 @@ function MenuNew() {
     )
   }
 
+  // Modale selezione tipo menù
+  if (showMenuTypeModal) {
+    return (
+      <MenuTypeModal onSelect={handleMenuTypeSelection} />
+    )
+  }
+  
   // Modale posti esauriti
   if (showSeatsFullModal) {
     return (
@@ -235,19 +266,37 @@ function MenuNew() {
           <div className="user-info">
             <h1 className="brand">Noel Fest</h1>
             <p className="user-name">{character}</p>
+            {menuType && (
+              <span className={`menu-badge ${menuType}`}>
+                {menuType === 'cucina' ? '🍝 Menù Cucina' : '🌭 Street Food'}
+              </span>
+            )}
           </div>
         </div>
         
-        {orderType === 'view_only' ? (
-          <button className="view-mode-btn" onClick={() => window.location.href = '/'}>
-            <span>📋 Vai al Menu Completo</span>
-          </button>
-        ) : (
-          <button className="cart-button" onClick={() => setShowCart(true)}>
-            <span className="cart-icon">🛒</span>
-            {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-          </button>
-        )}
+        <div className="header-right">
+          {orderType === 'view_only' ? (
+            <button className="view-mode-btn" onClick={() => window.location.href = '/'}>
+              <span>📋 Vai al Menu Completo</span>
+            </button>
+          ) : (
+            <>
+              {menuType && (
+                <button 
+                  className="switch-menu-btn" 
+                  onClick={() => setShowMenuTypeModal(true)}
+                  title="Cambia menù"
+                >
+                  <span>🔄</span>
+                </button>
+              )}
+              <button className="cart-button" onClick={() => setShowCart(true)}>
+                <span className="cart-icon">🛒</span>
+                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              </button>
+            </>
+          )}
+        </div>
       </header>
 
       {/* VIEW MODE BANNER */}
@@ -509,6 +558,43 @@ function ProductDetailModal({ product, onClose, onGoToMenu }) {
           <button className="product-modal-order-btn" onClick={onGoToMenu}>
             📋 Vai al Menu Completo
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MenuTypeModal({ onSelect }) {
+  return (
+    <div className="welcome-overlay">
+      <div className="welcome-modal menu-type-modal">
+        <div className="welcome-content">
+          <h1>🍽️ Scegli il Menù</h1>
+          <p className="welcome-subtitle">Quale menù desideri consultare?</p>
+          
+          <div className="menu-type-buttons">
+            <button 
+              className="welcome-btn menu-type-btn cucina"
+              onClick={() => onSelect('cucina')}
+            >
+              <span className="btn-icon">🍝</span>
+              <span className="btn-text">
+                <strong>Menù Cucina</strong>
+                <small>Antipasti, Primi, Secondi...</small>
+              </span>
+            </button>
+            
+            <button 
+              className="welcome-btn menu-type-btn street"
+              onClick={() => onSelect('street')}
+            >
+              <span className="btn-icon">🌭</span>
+              <span className="btn-text">
+                <strong>Street Food</strong>
+                <small>Panini, Fritti, Golosoni...</small>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

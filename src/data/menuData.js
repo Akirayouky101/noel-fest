@@ -177,6 +177,41 @@ export const menuData = {
     }
   ],
   
+  fritti: [
+    {
+      id: 'fri1',
+      name: 'Patatine fritte',
+      price: 3.50,
+      description: 'Porzione di patatine croccanti',
+      ingredients: 'Patate, olio, sale',
+      allergens: []
+    },
+    {
+      id: 'fri2',
+      name: 'Arancino di riso',
+      price: 3.50,
+      description: 'Arancino siciliano fritto',
+      ingredients: 'Riso, ragù, piselli, pangrattato',
+      allergens: ['Glutine']
+    },
+    {
+      id: 'fri3',
+      name: 'Nuggets di pollo',
+      price: 4.00,
+      description: 'Bocconcini di pollo impanati',
+      ingredients: 'Pollo, panatura',
+      allergens: ['Glutine']
+    },
+    {
+      id: 'fri4',
+      name: 'Frittella dolce/salata',
+      price: 3.00,
+      description: 'Frittella a scelta dolce o salata',
+      ingredients: 'Farina, lievito, zucchero/sale',
+      allergens: ['Glutine']
+    }
+  ],
+  
   dolci: [
     {
       id: 'dol1',
@@ -338,6 +373,113 @@ export const menuData = {
     },
     {
       id: 'bev14',
+      name: 'Caffè corretto',
+      price: 2.00,
+      description: 'Caffè con liquore',
+      ingredients: 'Caffè, liquore',
+      allergens: []
+    }
+  ],
+  
+  bevande_street: [
+    {
+      id: 'bevs1',
+      name: 'Bicchiere di rosso/bianco alla spina',
+      price: 2.50,
+      description: 'Vino rosso o bianco al bicchiere',
+      ingredients: 'Vino',
+      allergens: []
+    },
+    {
+      id: 'bevs2',
+      name: 'Birra bionda/rossa alla spina media',
+      price: 4.50,
+      description: 'Birra artigianale alla spina',
+      ingredients: 'Malto d\'orzo, luppolo, acqua',
+      allergens: ['Glutine']
+    },
+    {
+      id: 'bevs3',
+      name: 'Birra aromatizzata al Torcetto ESCLUSIVA',
+      price: 3.50,
+      description: 'Birra speciale aromatizzata',
+      ingredients: 'Birra, aromi naturali',
+      allergens: ['Glutine']
+    },
+    {
+      id: 'bevs4',
+      name: 'Bibite in lattina',
+      price: 2.50,
+      description: 'Bevande analcoliche varie',
+      ingredients: 'Acqua, zucchero, aromi',
+      allergens: []
+    },
+    {
+      id: 'bevs5',
+      name: 'Bottiglietta d\'acqua 1/2 litro',
+      price: 1.00,
+      description: 'Acqua minerale naturale',
+      ingredients: 'Acqua minerale',
+      allergens: []
+    },
+    {
+      id: 'bevs6',
+      name: 'Spritz',
+      price: 5.00,
+      description: 'Aperitivo Spritz classico',
+      ingredients: 'Prosecco, Aperol, seltz',
+      allergens: []
+    },
+    {
+      id: 'bevs7',
+      name: 'Amari',
+      price: 3.00,
+      description: 'Amaro digestivo',
+      ingredients: 'Alcool, erbe',
+      allergens: []
+    },
+    {
+      id: 'bevs8',
+      name: 'Gin Tonic / Gin Lemon',
+      price: 5.00,
+      description: 'Gin con tonica o lemon',
+      ingredients: 'Gin, tonica/lemon',
+      allergens: []
+    },
+    {
+      id: 'bevs9',
+      name: 'Shottino al passito',
+      price: 3.00,
+      description: 'Shot di vino passito',
+      ingredients: 'Vino passito',
+      allergens: []
+    },
+    {
+      id: 'bevs10',
+      name: 'Limoncello',
+      price: 3.00,
+      description: 'Liquore di limone',
+      ingredients: 'Alcool, limoni, zucchero',
+      allergens: []
+    },
+    {
+      id: 'bevs11',
+      name: 'Tisane',
+      price: 1.50,
+      description: 'Tisane calde varie',
+      ingredients: 'Erbe naturali',
+      allergens: []
+    },
+    {
+      id: 'bevs12',
+      name: 'Caffè',
+      price: 1.00,
+      description: 'Caffè espresso',
+      ingredients: 'Caffè',
+      allergens: []
+    },
+    {
+      id: 'bevs13',
       name: 'Caffè corretto',
       price: 2.00,
       description: 'Caffè con liquore',
