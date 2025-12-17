@@ -678,7 +678,11 @@ export default function AdminKanban({ user, onLogout }) {
               
               <button 
                 className="settings-toggle"
-                onClick={() => setSettingsModal(true)}
+                onClick={() => {
+                  console.log('🔧 Settings button clicked!')
+                  setSettingsModal(true)
+                  console.log('🔧 settingsModal set to true')
+                }}
                 title="Impostazioni"
               >
                 ⚙️
@@ -1273,6 +1277,7 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
       {/* Settings Modal */}
       {settingsModal && (
         <div className="modal-overlay" onClick={() => setSettingsModal(false)}>
+          {console.log('🎯 Modal is rendering! settingsModal =', settingsModal)}
           <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>⚙️ Impostazioni</h2>
