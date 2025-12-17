@@ -84,8 +84,12 @@ function Cart({ cart, character, numPeople = 1, onClose, onUpdateQuantity, onSub
 
           {/* Bottone conferma */}
           <div className="sheet-footer">
-            <button className="btn-confirm" onClick={confirmOrder} disabled={sending}>
-              {sending ? '⏳ Invio in corso...' : '✓ Conferma e Invia'}
+            <button 
+              className="btn-confirm" 
+              onClick={confirmOrder} 
+              disabled={sending || cart.length === 0}
+            >
+              {sending ? '⏳ Invio in corso...' : cart.length === 0 ? '⚠️ Carrello vuoto' : '✓ Conferma e Invia'}
             </button>
           </div>
         </div>

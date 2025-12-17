@@ -42,8 +42,24 @@ export async function createOrder(orderData) {
   
   console.log('📦 Creating order:', { characterName, email: orderData.email, numPeople, orderType })
   
+  // VALIDAZIONE: Verifica dati obbligatori
   if (!characterName) {
     throw new Error('character_name is required')
+  }
+  
+  if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+    console.error('❌ ERRORE: Tentativo di creare ordine con carrello vuoto!', orderData)
+    throw new Error('Cannot create order: cart is empty')
+  }
+  
+  // VALIDAZIONE: Verifica che ogni item abbia price e quantity validi
+  const invalidItems = orderData.items.filter(item => 
+    !item.price || !item.quantity || item.quantity <= 0
+  )
+  
+  if (invalidItems.length > 0) {
+    console.error('❌ ERRORE: Items non validi nel carrello:', invalidItems)
+    throw new Error('Cannot create order: invalid items in cart')
   }
   
   const total = orderData.total || orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)

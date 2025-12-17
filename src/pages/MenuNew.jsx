@@ -289,6 +289,21 @@ function MenuNew() {
   }
 
   const submitOrder = async (notes) => {
+    // VALIDAZIONE 1: Verifica che il carrello non sia vuoto
+    if (!cart || cart.length === 0) {
+      console.error('❌ ERRORE: Tentativo di inviare ordine con carrello vuoto!')
+      alert('⚠️ Il carrello è vuoto! Aggiungi almeno un articolo prima di ordinare.')
+      return
+    }
+    
+    // VALIDAZIONE 2: Verifica che tutti gli items abbiano quantità valida
+    const invalidItems = cart.filter(item => !item.quantity || item.quantity <= 0)
+    if (invalidItems.length > 0) {
+      console.error('❌ ERRORE: Items con quantità non valida:', invalidItems)
+      alert('⚠️ Alcuni articoli nel carrello hanno quantità non valida. Controlla il carrello.')
+      return
+    }
+    
     try {
       const orderData = {
         characterName: character,
