@@ -235,12 +235,45 @@ function MenuNew() {
         notes: notes || ''
       }
       
+      // 1. Crea ordine nel database
       await createOrder(orderData)
+      
+      // 2. Calcola totale per email
+      const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      const coperto = numPeople * 1.5
+      const total = itemsTotal + coperto
+      
+      // 3. Invia email di conferma (non bloccare se fallisce)
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-order-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            email: email,
+            characterName: character,
+            items: cart,
+            total: total,
+            numPeople: numPeople,
+            orderType: orderType
+          })
+        })
+        console.log('✅ Email di conferma inviata')
+      } catch (emailError) {
+        console.warn('⚠️ Email non inviata (ordine comunque creato):', emailError)
+      }
       
       setCart([])
       setShowCart(false)
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
+      
+      // Dopo 3 secondi: logout automatico e torna alla pagina iniziale
+      setTimeout(() => {
+        setShowSuccess(false)
+        handleBackToStart() // Esegui logout e reset
+      }, 3000)
     } catch (error) {
       console.error('Errore completo:', error)
       alert('Errore durante l\'invio dell\'ordine: ' + error.message)
