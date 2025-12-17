@@ -702,6 +702,47 @@
   background: rgba(15, 23, 42, 0.8);
 }
 
+/* Reservation card con solo posti (senza ordini) */
+.reservation-card.seats-only {
+  border: 2px solid rgba(255, 165, 0, 0.5);
+  background: rgba(255, 165, 0, 0.1);
+}
+
+.reservation-card.seats-only:hover {
+  border-color: rgba(255, 165, 0, 0.8);
+  background: rgba(255, 165, 0, 0.15);
+}
+
+.reservation-header-with-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.seats-only-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 140, 0, 0.9));
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 165, 0, 1);
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 165, 0, 0);
+  }
+}
+
 .reservation-character {
   font-size: 1.125rem;
   font-weight: 600;
@@ -736,6 +777,12 @@
   color: #64748b;
   opacity: 0;
   transition: opacity 0.2s;
+}
+
+.reservation-card.seats-only .reservation-hint {
+  color: #FFA500;
+  opacity: 1;
+  font-weight: 600;
 }
 
 .reservation-card.clickable:hover .reservation-hint {

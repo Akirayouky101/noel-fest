@@ -248,7 +248,27 @@ export default function AdminKanban({ user, onLogout }) {
       
       if (activeError) throw activeError
       
-      // 2. Carica gli ordini programmati (future reservations) - SOLO DA OGGI IN POI
+      // 2. Carica TUTTI gli ordini (per verificare quali prenotazioni hanno ordini)
+      const { data: allOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('character_name, status')
+        .neq('status', 'cancelled')
+      
+      if (ordersError) throw ordersError
+      
+      // 3. Crea Set dei characters che hanno ordini attivi
+      const charactersWithOrders = new Set(
+        (allOrders || []).map(order => order.character_name)
+      )
+      
+      // 4. Arricchisci le prenotazioni attive con info se hanno ordini
+      const enrichedActiveRes = (activeRes || []).map(res => ({
+        ...res,
+        has_orders: charactersWithOrders.has(res.character_name),
+        is_scheduled: false
+      }))
+      
+      // 5. Carica gli ordini programmati (future reservations) - SOLO DA OGGI IN POI
       const { data: scheduledOrders, error: scheduledError } = await supabase
         .from('orders')
         .select('*')
@@ -262,7 +282,7 @@ export default function AdminKanban({ user, onLogout }) {
       
       console.log(`📅 Query prenotazioni >= ${today}:`, scheduledOrders?.length || 0)
       
-      // 3. Trasforma gli ordini programmati nel formato reservation-card
+      // 6. Trasforma gli ordini programmati nel formato reservation-card
       const transformedScheduled = (scheduledOrders || []).map(order => ({
         id: `order-${order.id}`,
         character_name: order.character_name,
@@ -271,17 +291,20 @@ export default function AdminKanban({ user, onLogout }) {
         session_type: order.session_type,
         session_date: order.session_date,
         session_time: order.session_time,
-        is_scheduled: true // Flag per distinguerli
+        is_scheduled: true, // Flag per distinguerli
+        has_orders: true // Gli ordini programmati hanno sempre ordini
       }))
       
-      // 4. Combina e rimuovi duplicati (stessa persona presente in entrambe le liste)
-      const activeCharacters = new Set((activeRes || []).map(r => r.character_name))
+      // 7. Combina e rimuovi duplicati (stessa persona presente in entrambe le liste)
+      const activeCharacters = new Set(enrichedActiveRes.map(r => r.character_name))
       const uniqueScheduled = transformedScheduled.filter(s => !activeCharacters.has(s.character_name))
       
-      // 5. Combina le liste: prima attive, poi programmate
-      const combined = [...(activeRes || []), ...uniqueScheduled]
+      // 8. Combina le liste: prima attive, poi programmate
+      const combined = [...enrichedActiveRes, ...uniqueScheduled]
       
-      console.log('📅 Prenotazioni attive al tavolo:', activeRes?.length || 0)
+      console.log('📅 Prenotazioni attive al tavolo:', enrichedActiveRes.length)
+      console.log('   → Con ordini:', enrichedActiveRes.filter(r => r.has_orders).length)
+      console.log('   → Solo posti:', enrichedActiveRes.filter(r => !r.has_orders).length)
       console.log('🗓️ Ordini programmati (da oggi):', uniqueScheduled.length)
       console.log('📊 Totale prenotazioni visibili:', combined.length)
       
@@ -1232,11 +1255,16 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
           {reservations.map((reservation) => (
             <div 
               key={reservation.id} 
-              className={`reservation-card clickable ${reservation.is_scheduled ? 'scheduled' : 'active'}`}
+              className={`reservation-card clickable ${reservation.is_scheduled ? 'scheduled' : 'active'} ${!reservation.has_orders ? 'seats-only' : ''}`}
               onClick={() => onReservationClick(reservation.character_name)}
             >
-              <div className="reservation-character">
-                {reservation.is_scheduled ? '📅' : '🎅'} {reservation.character_name}
+              <div className="reservation-header-with-badge">
+                <div className="reservation-character">
+                  {reservation.is_scheduled ? '📅' : '🎅'} {reservation.character_name}
+                </div>
+                {!reservation.has_orders && !reservation.is_scheduled && (
+                  <span className="seats-only-badge">🪑 Solo Posti</span>
+                )}
               </div>
               <div className="reservation-details">
                 <div className="reservation-info">
@@ -1262,7 +1290,13 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
                 )}
               </div>
               <div className="reservation-hint">
-                {reservation.is_scheduled ? '⏰ Prenotazione futura' : '👆 Clicca per vedere gli ordini'}
+                {!reservation.has_orders && !reservation.is_scheduled ? (
+                  '⚠️ Posti occupati - Devono ancora ordinare'
+                ) : reservation.is_scheduled ? (
+                  '⏰ Prenotazione futura'
+                ) : (
+                  '👆 Clicca per vedere gli ordini'
+                )}
               </div>
             </div>
           ))}
