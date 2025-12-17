@@ -681,7 +681,7 @@ export default function AdminKanban({ user, onLogout }) {
                 onClick={() => setSettingsModal(true)}
                 title="Impostazioni"
               >
-                <Settings size={20} />
+                ⚙️
               </button>
               
               <button 
