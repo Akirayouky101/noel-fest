@@ -28,7 +28,11 @@ export default function AdminKanban({ user, onLogout }) {
   const [showSeatsManager, setShowSeatsManager] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
-  const [settingsModal, setSettingsModal] = useState(false)
+  const [settingsModal, setSettingsModal] = useState(() => {
+    const stored = localStorage.getItem('settingsModalOpen')
+    console.log('🔧 Initial settingsModal from localStorage:', stored)
+    return stored === 'true'
+  })
   const audioRef = useRef(null)
   const settingsModalRef = useRef(false)
   
@@ -684,20 +688,18 @@ export default function AdminKanban({ user, onLogout }) {
               
               <button 
                 className="settings-toggle"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                   console.log('🔧 Settings button clicked!')
                   console.log('🔧 BEFORE - settingsModal:', settingsModal)
-                  console.log('🔧 BEFORE - settingsModalRef:', settingsModalRef.current)
-                  setSettingsModal(prev => {
-                    console.log('🔧 setState callback - prev:', prev)
-                    return true
-                  })
-                  settingsModalRef.current = true
-                  console.log('🔧 AFTER - settingsModalRef:', settingsModalRef.current)
-                  // Force re-render
-                  setTimeout(() => {
-                    console.log('🔧 setTimeout - settingsModal:', settingsModal)
-                  }, 100)
+                  
+                  // Use localStorage as backup
+                  localStorage.setItem('settingsModalOpen', 'true')
+                  console.log('🔧 localStorage set to true')
+                  
+                  setSettingsModal(true)
+                  console.log('🔧 setState called with true')
                 }}
                 title="Impostazioni"
               >
@@ -1292,12 +1294,18 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
 
       {/* Settings Modal */}
       {settingsModal && (
-        <div className="modal-overlay" onClick={() => setSettingsModal(false)}>
+        <div className="modal-overlay" onClick={() => {
+          localStorage.removeItem('settingsModalOpen')
+          setSettingsModal(false)
+        }}>
           {console.log('🎯 Modal is rendering! settingsModal =', settingsModal)}
           <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>⚙️ Impostazioni</h2>
-              <button className="close-btn" onClick={() => setSettingsModal(false)}>✕</button>
+              <button className="close-btn" onClick={() => {
+                localStorage.removeItem('settingsModalOpen')
+                setSettingsModal(false)
+              }}>✕</button>
             </div>
             
             <div className="settings-body">
@@ -1326,7 +1334,10 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
             </div>
 
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setSettingsModal(false)}>
+              <button className="btn btn-secondary" onClick={() => {
+                localStorage.removeItem('settingsModalOpen')
+                setSettingsModal(false)
+              }}>
                 Chiudi
               </button>
             </div>
