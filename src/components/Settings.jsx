@@ -1,75 +1,93 @@
 import { useState, useEffect } from 'react'
-import { getAllSystemConfig, updateMultipleConfigs } from '../lib/supabaseAPI'
+import { supabase } from '../supabaseClient'
+import { toast } from 'react-hot-toast'
 import './Settings.css'
 
-export default function Settings() {
-  const [config, setConfig] = useState({
-    total_seats: '150',
-    walkin_seats: '100',
-    coperto_price: '1.50',
-    reservations_enabled: 'true',
-    orders_enabled: 'true',
-    lunch_start: '12:00',
-    lunch_end: '15:00',
-    dinner_start: '19:00',
-    dinner_end: '23:00'
+function Settings() {
+  const [settings, setSettings] = useState({
+    // Orari prenotazioni
+    reservation_start_time: '18:00',
+    reservation_end_time: '23:00',
+    reservation_slot_duration: 30, // minuti
+    
+    // Limiti posti
+    max_total_seats: 50,
+    max_reservation_people: 10,
+    max_immediate_people: 6,
+    
+    // Email
+    email_enabled: true,
+    notification_email: 'admin@noelfest.com',
+    
+    // Coperto
+    coperto_price: 1.50,
+    coperto_enabled: true,
+    
+    // Messaggi
+    welcome_message: 'Benvenuto al Noel Fest! 🎄',
+    closed_message: 'Siamo chiusi. Torna presto!',
+    
+    // Sistema
+    auto_logout_delay: 3000, // millisecondi
+    maintenance_mode: false,
   })
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
-    loadConfig()
+    loadSettings()
   }, [])
 
-  const loadConfig = async () => {
+  const loadSettings = async () => {
     try {
-      const data = await getAllSystemConfig()
-      setConfig(data)
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        throw error
+      }
+
+      if (data) {
+        setSettings(data)
+      }
     } catch (error) {
-      console.error('Errore caricamento configurazione:', error)
+      console.error('Error loading settings:', error)
+      toast.error('Errore caricamento impostazioni')
     } finally {
       setLoading(false)
     }
   }
 
-  const saveConfig = async () => {
+  const saveSettings = async () => {
     setSaving(true)
     try {
-      await updateMultipleConfigs(config)
-      setSuccessMessage('✅ Configurazione salvata con successo!')
-      setTimeout(() => setSuccessMessage(''), 3000)
+      const { error } = await supabase
+        .from('settings')
+        .upsert(settings, { onConflict: 'id' })
+
+      if (error) throw error
+
+      toast.success('✅ Impostazioni salvate!')
     } catch (error) {
-      console.error('Errore salvataggio:', error)
-      alert('Errore durante il salvataggio: ' + error.message)
+      console.error('Error saving settings:', error)
+      toast.error('❌ Errore salvataggio')
     } finally {
       setSaving(false)
     }
   }
 
-  const resetToDefaults = () => {
-    if (confirm('Sei sicuro di voler ripristinare i valori predefiniti?')) {
-      setConfig({
-        total_seats: '150',
-        walkin_seats: '100',
-        coperto_price: '1.50',
-        reservations_enabled: 'true',
-        orders_enabled: 'true',
-        lunch_start: '12:00',
-        lunch_end: '15:00',
-        dinner_start: '19:00',
-        dinner_end: '23:00'
-      })
-    }
+  const handleChange = (key, value) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
   }
 
   if (loading) {
     return (
-      <div className="settings-container">
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Caricamento configurazione...</p>
-        </div>
+      <div className="settings-loading">
+        <div className="loading-spinner"></div>
+        <p>Caricamento impostazioni...</p>
       </div>
     )
   }
@@ -77,217 +95,263 @@ export default function Settings() {
   return (
     <div className="settings-container">
       <div className="settings-header">
-        <h1>⚙️ Configurazione Sistema</h1>
-        <p>Gestisci i parametri globali di Noel Fest</p>
+        <h1>⚙️ Impostazioni Sistema</h1>
+        <p>Configura tutti i parametri del Noel Fest</p>
       </div>
 
-      {successMessage && (
-        <div className="success-banner">
-          {successMessage}
-        </div>
-      )}
-
-      <div className="settings-sections">
-        {/* Posti a sedere */}
+      <div className="settings-grid">
+        {/* Sezione Orari Prenotazioni */}
         <div className="settings-section">
-          <h2>🪑 Gestione Posti</h2>
+          <div className="section-header">
+            <h2>🕐 Orari Prenotazioni</h2>
+            <span className="section-icon">📅</span>
+          </div>
           
           <div className="setting-item">
-            <div className="setting-info">
-              <h3>Posti Prenotabili</h3>
-              <p>Numero totale di posti disponibili per "Prenota Posto"</p>
-            </div>
-            <input
-              type="number"
-              min="0"
-              max="500"
-              value={config.total_seats}
-              onChange={(e) => setConfig({ ...config, total_seats: e.target.value })}
-              className="setting-input"
-            />
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>Posti Walk-in</h3>
-              <p>Posti aggiuntivi per clienti senza prenotazione</p>
-            </div>
-            <input
-              type="number"
-              min="0"
-              max="500"
-              value={config.walkin_seats}
-              onChange={(e) => setConfig({ ...config, walkin_seats: e.target.value })}
-              className="setting-input"
-            />
-          </div>
-
-          <div className="seats-preview">
-            <div className="preview-card">
-              <span className="preview-label">Totale Posti Sistema:</span>
-              <span className="preview-value">{parseInt(config.total_seats || 0) + parseInt(config.walkin_seats || 0)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Prezzi */}
-        <div className="settings-section">
-          <h2>💰 Prezzi e Costi</h2>
-          
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>Coperto</h3>
-              <p>Prezzo del coperto per persona (€)</p>
-            </div>
-            <input
-              type="number"
-              min="0"
-              max="10"
-              step="0.10"
-              value={config.coperto_price}
-              onChange={(e) => setConfig({ ...config, coperto_price: e.target.value })}
-              className="setting-input"
-            />
-          </div>
-        </div>
-
-        {/* Funzionalità */}
-        <div className="settings-section">
-          <h2>🔧 Funzionalità Sistema</h2>
-          
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>Prenotazioni Posti</h3>
-              <p>Abilita/Disabilita la funzione "Prenota Posto"</p>
-            </div>
-            <label className="toggle-switch">
+            <label>
+              <span className="label-text">Orario Inizio</span>
               <input
-                type="checkbox"
-                checked={config.reservations_enabled}
-                onChange={(e) => setConfig({ ...config, reservations_enabled: e.target.checked })}
+                type="time"
+                value={settings.reservation_start_time}
+                onChange={(e) => handleChange('reservation_start_time', e.target.value)}
               />
-              <span className="toggle-slider"></span>
             </label>
           </div>
 
           <div className="setting-item">
-            <div className="setting-info">
-              <h3>Ordini Online</h3>
-              <p>Abilita/Disabilita tutti gli ordini online</p>
-            </div>
-            <label className="toggle-switch">
+            <label>
+              <span className="label-text">Orario Fine</span>
               <input
-                type="checkbox"
-                checked={config.orders_enabled}
-                onChange={(e) => setConfig({ ...config, orders_enabled: e.target.checked })}
+                type="time"
+                value={settings.reservation_end_time}
+                onChange={(e) => handleChange('reservation_end_time', e.target.value)}
               />
-              <span className="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Durata Slot (minuti)</span>
+              <input
+                type="number"
+                min="15"
+                max="120"
+                step="15"
+                value={settings.reservation_slot_duration}
+                onChange={(e) => handleChange('reservation_slot_duration', parseInt(e.target.value))}
+              />
             </label>
           </div>
         </div>
 
-        {/* Orari Sessioni */}
+        {/* Sezione Limiti Posti */}
         <div className="settings-section">
-          <h2>🕐 Orari Prenotazioni</h2>
-          <p style={{ marginBottom: '20px', color: 'rgba(255, 255, 255, 0.7)' }}>
-            Configura gli orari disponibili per le prenotazioni Pranzo e Cena
-          </p>
-          
-          <div className="session-times-grid">
-            <div className="session-time-card">
-              <h3>🌞 Pranzo</h3>
-              <div className="time-inputs">
-                <div className="time-input-group">
-                  <label>Inizio</label>
-                  <input
-                    type="time"
-                    value={config.lunch_start}
-                    onChange={(e) => setConfig({ ...config, lunch_start: e.target.value })}
-                    className="time-input"
-                  />
-                </div>
-                <span className="time-separator">→</span>
-                <div className="time-input-group">
-                  <label>Fine</label>
-                  <input
-                    type="time"
-                    value={config.lunch_end}
-                    onChange={(e) => setConfig({ ...config, lunch_end: e.target.value })}
-                    className="time-input"
-                  />
-                </div>
-              </div>
-            </div>
+          <div className="section-header">
+            <h2>👥 Limiti Posti</h2>
+            <span className="section-icon">🪑</span>
+          </div>
 
-            <div className="session-time-card">
-              <h3>🌙 Cena</h3>
-              <div className="time-inputs">
-                <div className="time-input-group">
-                  <label>Inizio</label>
-                  <input
-                    type="time"
-                    value={config.dinner_start}
-                    onChange={(e) => setConfig({ ...config, dinner_start: e.target.value })}
-                    className="time-input"
-                  />
-                </div>
-                <span className="time-separator">→</span>
-                <div className="time-input-group">
-                  <label>Fine</label>
-                  <input
-                    type="time"
-                    value={config.dinner_end}
-                    onChange={(e) => setConfig({ ...config, dinner_end: e.target.value })}
-                    className="time-input"
-                  />
-                </div>
-              </div>
-            </div>
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Posti Totali Disponibili</span>
+              <input
+                type="number"
+                min="10"
+                max="500"
+                value={settings.max_total_seats}
+                onChange={(e) => handleChange('max_total_seats', parseInt(e.target.value))}
+              />
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Max Persone per Prenotazione</span>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={settings.max_reservation_people}
+                onChange={(e) => handleChange('max_reservation_people', parseInt(e.target.value))}
+              />
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Max Persone Ordine Immediato</span>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={settings.max_immediate_people}
+                onChange={(e) => handleChange('max_immediate_people', parseInt(e.target.value))}
+              />
+            </label>
           </div>
         </div>
 
-        {/* Info Sistema */}
+        {/* Sezione Coperto */}
         <div className="settings-section">
-          <h2>ℹ️ Informazioni Sistema</h2>
-          
-          <div className="info-grid">
-            <div className="info-card">
-              <h4>Database</h4>
-              <p>dbgxaxaie7pbze</p>
-            </div>
-            <div className="info-card">
-              <h4>Versione</h4>
-              <p>1.0.0</p>
-            </div>
-            <div className="info-card">
-              <h4>Evento</h4>
-              <p>Noel Fest 2025</p>
-            </div>
-            <div className="info-card">
-              <h4>Organizzatore</h4>
-              <p>Proloco Lanzo TSE</p>
-            </div>
+          <div className="section-header">
+            <h2>💰 Coperto</h2>
+            <span className="section-icon">🍽️</span>
+          </div>
+
+          <div className="setting-item toggle-item">
+            <label>
+              <span className="label-text">Abilita Coperto</span>
+              <div className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.coperto_enabled}
+                  onChange={(e) => handleChange('coperto_enabled', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Prezzo Coperto (€)</span>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="0.50"
+                value={settings.coperto_price}
+                onChange={(e) => handleChange('coperto_price', parseFloat(e.target.value))}
+                disabled={!settings.coperto_enabled}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Sezione Email */}
+        <div className="settings-section">
+          <div className="section-header">
+            <h2>📧 Email</h2>
+            <span className="section-icon">✉️</span>
+          </div>
+
+          <div className="setting-item toggle-item">
+            <label>
+              <span className="label-text">Abilita Invio Email</span>
+              <div className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.email_enabled}
+                  onChange={(e) => handleChange('email_enabled', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Email Notifiche Admin</span>
+              <input
+                type="email"
+                value={settings.notification_email}
+                onChange={(e) => handleChange('notification_email', e.target.value)}
+                placeholder="admin@noelfest.com"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Sezione Messaggi */}
+        <div className="settings-section full-width">
+          <div className="section-header">
+            <h2>💬 Messaggi Personalizzati</h2>
+            <span className="section-icon">📝</span>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Messaggio di Benvenuto</span>
+              <input
+                type="text"
+                value={settings.welcome_message}
+                onChange={(e) => handleChange('welcome_message', e.target.value)}
+                placeholder="Benvenuto al Noel Fest! 🎄"
+              />
+            </label>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Messaggio Chiusura</span>
+              <input
+                type="text"
+                value={settings.closed_message}
+                onChange={(e) => handleChange('closed_message', e.target.value)}
+                placeholder="Siamo chiusi. Torna presto!"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Sezione Sistema */}
+        <div className="settings-section">
+          <div className="section-header">
+            <h2>🔧 Sistema</h2>
+            <span className="section-icon">⚙️</span>
+          </div>
+
+          <div className="setting-item">
+            <label>
+              <span className="label-text">Ritardo Auto-Logout (ms)</span>
+              <input
+                type="number"
+                min="1000"
+                max="10000"
+                step="500"
+                value={settings.auto_logout_delay}
+                onChange={(e) => handleChange('auto_logout_delay', parseInt(e.target.value))}
+              />
+              <small>{(settings.auto_logout_delay / 1000).toFixed(1)} secondi</small>
+            </label>
+          </div>
+
+          <div className="setting-item toggle-item">
+            <label>
+              <span className="label-text">Modalità Manutenzione</span>
+              <div className="toggle-switch danger">
+                <input
+                  type="checkbox"
+                  checked={settings.maintenance_mode}
+                  onChange={(e) => handleChange('maintenance_mode', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
+            <small>Il sito sarà inaccessibile agli utenti</small>
           </div>
         </div>
       </div>
 
       {/* Pulsanti Azione */}
       <div className="settings-actions">
-        <button 
-          className="btn-reset"
-          onClick={resetToDefaults}
-          disabled={saving}
-        >
-          🔄 Ripristina Valori Predefiniti
-        </button>
-        <button 
+        <button
           className="btn-save"
-          onClick={saveConfig}
+          onClick={saveSettings}
           disabled={saving}
         >
-          {saving ? '💾 Salvataggio...' : '💾 Salva Configurazione'}
+          {saving ? '⏳ Salvataggio...' : '💾 Salva Impostazioni'}
+        </button>
+        
+        <button
+          className="btn-reset"
+          onClick={loadSettings}
+        >
+          🔄 Ripristina
         </button>
       </div>
     </div>
   )
 }
+
+export default Settings
