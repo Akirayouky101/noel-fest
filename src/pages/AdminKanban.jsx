@@ -4,7 +4,7 @@ import {
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Trash2, Search,
   Filter, Calendar, X, BarChart3, LayoutGrid, LogOut,
-  ChevronDown, AlertTriangle, Armchair, CalendarDays, Settings
+  ChevronDown, AlertTriangle, Armchair, CalendarDays
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -28,13 +28,7 @@ export default function AdminKanban({ user, onLogout }) {
   const [showSeatsManager, setShowSeatsManager] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
-  const [settingsModal, setSettingsModal] = useState(() => {
-    const stored = localStorage.getItem('settingsModalOpen')
-    console.log('🔧 Initial settingsModal from localStorage:', stored)
-    return stored === 'true'
-  })
   const audioRef = useRef(null)
-  const settingsModalRef = useRef(false)
   
   // Filtri
   const [searchTerm, setSearchTerm] = useState('')
@@ -79,11 +73,6 @@ export default function AdminKanban({ user, onLogout }) {
   useEffect(() => {
     calculateStats()
   }, [orders])
-
-  // Debug settingsModal changes
-  useEffect(() => {
-    console.log('🔍 useEffect: settingsModal changed to:', settingsModal)
-  }, [settingsModal])
 
   // Apply filters
   useEffect(() => {
@@ -687,23 +676,11 @@ export default function AdminKanban({ user, onLogout }) {
               )}
               
               <button 
-                className="settings-toggle"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('🔧 Settings button clicked!')
-                  console.log('🔧 BEFORE - settingsModal:', settingsModal)
-                  
-                  // Use localStorage as backup
-                  localStorage.setItem('settingsModalOpen', 'true')
-                  console.log('🔧 localStorage set to true')
-                  
-                  setSettingsModal(true)
-                  console.log('🔧 setState called with true')
-                }}
-                title="Impostazioni"
+                className={`audio-toggle ${audioEnabled ? 'active' : ''}`}
+                onClick={toggleAudio}
+                title={audioEnabled ? 'Disabilita audio' : 'Abilita audio'}
               >
-                ⚙️
+                {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
               
               <button 
@@ -1289,59 +1266,6 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Settings Modal */}
-      {settingsModal && (
-        <div className="modal-overlay" onClick={() => {
-          localStorage.removeItem('settingsModalOpen')
-          setSettingsModal(false)
-        }}>
-          {console.log('🎯 Modal is rendering! settingsModal =', settingsModal)}
-          <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>⚙️ Impostazioni</h2>
-              <button className="close-btn" onClick={() => {
-                localStorage.removeItem('settingsModalOpen')
-                setSettingsModal(false)
-              }}>✕</button>
-            </div>
-            
-            <div className="settings-body">
-              <div className="setting-item">
-                <div className="setting-info">
-                  <h3>🔔 Notifiche Audio</h3>
-                  <p>Riproduci un suono quando arriva un nuovo ordine</p>
-                </div>
-                <label className="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    checked={audioEnabled}
-                    onChange={toggleAudio}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              <div className="setting-item clickable" onClick={() => window.location.href = '/admin'}>
-                <div className="setting-info">
-                  <h3>⚙️ Configurazione Avanzata</h3>
-                  <p>Orari, posti, coperto, email e altri parametri</p>
-                </div>
-                <span className="arrow">→</span>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => {
-                localStorage.removeItem('settingsModalOpen')
-                setSettingsModal(false)
-              }}>
-                Chiudi
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

@@ -42,31 +42,39 @@ function Settings() {
   const loadSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('settings')
+        .from('system_config')
         .select('*')
-        .eq('id', 1)
-        .single()
 
       if (error) throw error
 
-      if (data) {
-        setSettings({
-          reservation_start_time: data.reservation_start_time,
-          reservation_end_time: data.reservation_end_time,
-          reservation_slot_duration: data.reservation_slot_duration,
-          max_total_seats: data.max_total_seats,
-          max_reservation_people: data.max_reservation_people,
-          max_immediate_people: data.max_immediate_people,
-          email_enabled: data.email_enabled,
-          notification_email: data.notification_email,
-          coperto_price: parseFloat(data.coperto_price),
-          coperto_enabled: data.coperto_enabled,
-          welcome_message: data.welcome_message,
-          closed_message: data.closed_message,
-          auto_logout_delay: data.auto_logout_delay,
-          maintenance_mode: data.maintenance_mode,
-        })
-      }
+      // Converti array di key-value in oggetto
+      const configObj = {}
+      data.forEach(item => {
+        const value = item.config_value
+        // Converti valori
+        if (value === 'true') configObj[item.config_key] = true
+        else if (value === 'false') configObj[item.config_key] = false
+        else if (!isNaN(value)) configObj[item.config_key] = parseFloat(value)
+        else configObj[item.config_key] = value
+      })
+
+      // Mappa i nomi delle chiavi
+      setSettings({
+        reservation_start_time: configObj.dinner_start || '18:00',
+        reservation_end_time: configObj.dinner_end || '23:00',
+        reservation_slot_duration: configObj.reservation_slot_duration || 30,
+        max_total_seats: configObj.total_seats || 50,
+        max_reservation_people: configObj.max_reservation_people || 10,
+        max_immediate_people: configObj.max_immediate_people || 6,
+        email_enabled: configObj.email_enabled !== false,
+        notification_email: configObj.notification_email || 'admin@noelfest.com',
+        coperto_price: configObj.coperto_price || 1.50,
+        coperto_enabled: configObj.coperto_enabled !== false,
+        welcome_message: configObj.welcome_message || 'Benvenuto al Noel Fest! 🎄',
+        closed_message: configObj.closed_message || 'Siamo chiusi. Torna presto!',
+        auto_logout_delay: configObj.auto_logout_delay || 3000,
+        maintenance_mode: configObj.maintenance_mode === true,
+      })
     } catch (error) {
       console.error('Error loading settings:', error)
       toast.error('Errore caricamento impostazioni')
@@ -78,27 +86,33 @@ function Settings() {
   const saveSettings = async () => {
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('settings')
-        .update({
-          reservation_start_time: settings.reservation_start_time,
-          reservation_end_time: settings.reservation_end_time,
-          reservation_slot_duration: settings.reservation_slot_duration,
-          max_total_seats: settings.max_total_seats,
-          max_reservation_people: settings.max_reservation_people,
-          max_immediate_people: settings.max_immediate_people,
-          email_enabled: settings.email_enabled,
-          notification_email: settings.notification_email,
-          coperto_price: settings.coperto_price,
-          coperto_enabled: settings.coperto_enabled,
-          welcome_message: settings.welcome_message,
-          closed_message: settings.closed_message,
-          auto_logout_delay: settings.auto_logout_delay,
-          maintenance_mode: settings.maintenance_mode,
-        })
-        .eq('id', 1)
+      // Converti oggetto settings in array di updates
+      const updates = [
+        { config_key: 'dinner_start', config_value: settings.reservation_start_time },
+        { config_key: 'dinner_end', config_value: settings.reservation_end_time },
+        { config_key: 'reservation_slot_duration', config_value: String(settings.reservation_slot_duration) },
+        { config_key: 'total_seats', config_value: String(settings.max_total_seats) },
+        { config_key: 'max_reservation_people', config_value: String(settings.max_reservation_people) },
+        { config_key: 'max_immediate_people', config_value: String(settings.max_immediate_people) },
+        { config_key: 'email_enabled', config_value: String(settings.email_enabled) },
+        { config_key: 'notification_email', config_value: settings.notification_email },
+        { config_key: 'coperto_price', config_value: String(settings.coperto_price) },
+        { config_key: 'coperto_enabled', config_value: String(settings.coperto_enabled) },
+        { config_key: 'welcome_message', config_value: settings.welcome_message },
+        { config_key: 'closed_message', config_value: settings.closed_message },
+        { config_key: 'auto_logout_delay', config_value: String(settings.auto_logout_delay) },
+        { config_key: 'maintenance_mode', config_value: String(settings.maintenance_mode) },
+      ]
 
-      if (error) throw error
+      // Aggiorna ogni configurazione
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('system_config')
+          .update({ config_value: update.config_value })
+          .eq('config_key', update.config_key)
+
+        if (error) throw error
+      }
 
       toast.success('✅ Impostazioni salvate!')
     } catch (error) {

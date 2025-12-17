@@ -30,7 +30,6 @@ export default function OrdersDashboard() {
   const [freeSeatsModal, setFreeSeatsModal] = useState({ show: false, characterName: '' })
   const [walkinModal, setWalkinModal] = useState({ show: false, order: null, numSeats: 1 })
   const [successModal, setSuccessModal] = useState({ show: false, message: '' })
-  const [settingsModal, setSettingsModal] = useState(false) // Nuovo: modal impostazioni
   const [availableSeats, setAvailableSeats] = useState(150)
   const [walkinSeats, setWalkinSeats] = useState({ total: 100, occupied: 0 })
   const [activeReservations, setActiveReservations] = useState(new Set())
@@ -668,11 +667,11 @@ export default function OrdersDashboard() {
       <header className="admin-header">
         <h1>🎄 Dashboard Ordini - Noel Fest 🎅</h1>
         <button 
-          className="settings-toggle"
-          onClick={() => setSettingsModal(true)}
-          title="Impostazioni"
+          className={`audio-toggle ${audioEnabled ? 'enabled' : 'disabled'}`}
+          onClick={() => setAudioEnabled(!audioEnabled)}
+          title={audioEnabled ? 'Disattiva notifiche audio' : 'Attiva notifiche audio'}
         >
-          ⚙️
+          {audioEnabled ? '🔔' : '🔕'}
         </button>
       </header>
 
@@ -1304,60 +1303,6 @@ function EditOrderModal({ order, onClose, onSave, menuData }) {
           </button>
         </div>
       </div>
-
-      {/* Modal Impostazioni */}
-      {settingsModal && (
-        <div className="modal-overlay" onClick={() => setSettingsModal(false)}>
-          <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>⚙️ Impostazioni</h2>
-              <button className="modal-close" onClick={() => setSettingsModal(false)}>✕</button>
-            </div>
-            
-            <div className="settings-body">
-              {/* Notifiche Audio */}
-              <div className="setting-item">
-                <div className="setting-label">
-                  <span className="setting-icon">{audioEnabled ? '🔔' : '🔕'}</span>
-                  <div>
-                    <h3>Notifiche Audio</h3>
-                    <p>Suono quando arrivano nuovi ordini</p>
-                  </div>
-                </div>
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={audioEnabled}
-                    onChange={(e) => setAudioEnabled(e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-
-              {/* Link a Pannello Completo */}
-              <div className="setting-item clickable" onClick={() => window.location.href = '/admin'}>
-                <div className="setting-label">
-                  <span className="setting-icon">🎛️</span>
-                  <div>
-                    <h3>Configurazione Avanzata</h3>
-                    <p>Orari, posti, coperto, email e altro</p>
-                  </div>
-                </div>
-                <span className="setting-arrow">→</span>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button 
-                className="btn-modal-cancel" 
-                onClick={() => setSettingsModal(false)}
-              >
-                ✓ Chiudi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
