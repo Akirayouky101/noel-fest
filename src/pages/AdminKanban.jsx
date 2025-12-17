@@ -4,7 +4,7 @@ import {
   Clock, Users, Package, TrendingUp, RefreshCw, 
   Volume2, VolumeX, Trash2, Search,
   Filter, Calendar, X, BarChart3, LayoutGrid, LogOut,
-  ChevronDown, AlertTriangle, Armchair, CalendarDays
+  ChevronDown, AlertTriangle, Armchair, CalendarDays, Settings
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { 
@@ -28,6 +28,7 @@ export default function AdminKanban({ user, onLogout }) {
   const [showSeatsManager, setShowSeatsManager] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
+  const [settingsModal, setSettingsModal] = useState(false)
   const audioRef = useRef(null)
   
   // Filtri
@@ -676,11 +677,11 @@ export default function AdminKanban({ user, onLogout }) {
               )}
               
               <button 
-                className={`audio-toggle ${audioEnabled ? 'active' : ''}`}
-                onClick={toggleAudio}
-                title={audioEnabled ? 'Disabilita audio' : 'Abilita audio'}
+                className="settings-toggle"
+                onClick={() => setSettingsModal(true)}
+                title="Impostazioni"
               >
-                {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                <Settings size={20} />
               </button>
               
               <button 
@@ -1266,6 +1267,49 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {settingsModal && (
+        <div className="modal-overlay" onClick={() => setSettingsModal(false)}>
+          <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>⚙️ Impostazioni</h2>
+              <button className="close-btn" onClick={() => setSettingsModal(false)}>✕</button>
+            </div>
+            
+            <div className="settings-body">
+              <div className="setting-item">
+                <div className="setting-info">
+                  <h3>🔔 Notifiche Audio</h3>
+                  <p>Riproduci un suono quando arriva un nuovo ordine</p>
+                </div>
+                <label className="toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    checked={audioEnabled}
+                    onChange={toggleAudio}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div className="setting-item clickable" onClick={() => window.location.href = '/admin'}>
+                <div className="setting-info">
+                  <h3>⚙️ Configurazione Avanzata</h3>
+                  <p>Orari, posti, coperto, email e altri parametri</p>
+                </div>
+                <span className="arrow">→</span>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setSettingsModal(false)}>
+                Chiudi
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
