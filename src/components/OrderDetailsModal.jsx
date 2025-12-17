@@ -1,5 +1,6 @@
 import { X, Clock, Users, Calendar, Package, CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { freeReservationSeats } from '../lib/supabaseAPI'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -85,7 +86,7 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
     setIsCompleting(true)
     
     try {
-      // Aggiorna tutti gli ordini a "completed"
+      // 1. Aggiorna tutti gli ordini a "completed"
       const orderIds = orders.map(o => o.id)
       
       const { error } = await supabase
@@ -95,7 +96,19 @@ export default function OrderDetailsModal({ characterName, orders, onClose }) {
       
       if (error) throw error
       
-      toast.success(`✅ ${totalOrders} ordini completati!`)
+      // 2. Verifica se ci sono ordini con prenotazione (at_register)
+      const hasReservation = orders.some(o => 
+        o.sessionType === 'lunch' || o.sessionType === 'dinner'
+      )
+      
+      // 3. Se c'è una prenotazione, libera SOLO i posti (non eliminare gli ordini)
+      if (hasReservation) {
+        await freeReservationSeats(characterName)
+        toast.success(`✅ ${totalOrders} ordini completati e posti liberati!`)
+      } else {
+        // Ordini immediati: non hanno posti da liberare
+        toast.success(`✅ ${totalOrders} ordini completati!`)
+      }
       
       // Chiudi modale e ricarica
       setTimeout(() => {

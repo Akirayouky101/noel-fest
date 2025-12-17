@@ -318,6 +318,43 @@ export async function deleteReservation(characterName) {
   }
 }
 
+// Libera solo i posti di prenotazione, mantenendo gli ordini (per ordini completati)
+export async function freeReservationSeats(characterName) {
+  try {
+    console.log(`🪑 Freeing reservation seats for: ${characterName}`)
+    
+    // 1. Delete from active_reservations (libera i posti)
+    const { error: resError } = await supabase
+      .from('active_reservations')
+      .delete()
+      .eq('character_name', characterName)
+    
+    if (resError) {
+      console.warn('Warning freeing reservation seats:', resError)
+    } else {
+      console.log(`✅ Freed reservation seats for ${characterName}`)
+    }
+    
+    // 2. Delete from walkin_seats if exists (libera i posti walk-in)
+    const { error: walkinError } = await supabase
+      .from('walkin_seats')
+      .delete()
+      .eq('character_name', characterName)
+    
+    if (walkinError) {
+      console.warn('Warning freeing walk-in seats:', walkinError)
+    } else {
+      console.log(`✅ Freed walk-in seats for ${characterName}`)
+    }
+    
+    // NON elimina gli ordini - rimangono in "completed" per lo storico
+    console.log(`✅ Reservation seats freed for ${characterName}, orders preserved`)
+  } catch (error) {
+    console.error('Error in freeReservationSeats:', error)
+    throw error
+  }
+}
+
 export async function updateReservationPeople(characterName, numPeople) {
   // Aggiorna la prenotazione
   const { error: reservationError } = await supabase
