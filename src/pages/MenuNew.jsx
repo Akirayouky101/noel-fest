@@ -378,10 +378,32 @@ function MenuNew() {
     try {
       console.log('🪑 Occupando posti senza ordine per:', character)
       
-      // Crea solo la prenotazione, senza ordine
+      // 1. Crea la prenotazione
       await createReservation(character, email, numPeople, sessionData)
       
       console.log('✅ Posti occupati con successo')
+      
+      // 2. Invia email di conferma prenotazione posti (senza ordine)
+      try {
+        const emailResult = await sendOrderConfirmationEmail({
+          email: email,
+          characterName: character,
+          items: [], // Nessun item - solo prenotazione posti
+          total: 0, // Nessun totale ancora
+          numPeople: numPeople,
+          orderType: 'at_register',
+          sessionData: sessionData,
+          isSeatsOnly: true // Flag per indicare che è solo prenotazione posti
+        })
+        
+        if (emailResult.success) {
+          console.log('✅ Email conferma prenotazione inviata')
+        } else {
+          console.warn('⚠️ Email non inviata:', emailResult.error)
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Email non inviata (prenotazione comunque creata):', emailError)
+      }
       
       setShowReserveOnlyModal(false)
       setShowSuccess(true)

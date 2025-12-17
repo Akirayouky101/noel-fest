@@ -10,17 +10,27 @@ export async function sendOrderConfirmationEmail(orderData) {
     // URL dell'endpoint PHP su Siteground
     const apiUrl = 'https://appdataconnect.it/api/send-email.php'
     
+    // Gestisci caso "solo posti" (isSeatsOnly)
+    const isSeatsOnly = orderData.isSeatsOnly || false
+    
     // Prepara i dati per l'email
     const emailData = {
       email: orderData.email,
       characterName: orderData.characterName,
-      orderType: orderData.orderType === 'immediato' ? 'Ordine Immediato' : 'Prenotazione',
+      orderType: isSeatsOnly 
+        ? 'Prenotazione Posti (Ordine in presenza)' 
+        : (orderData.orderType === 'immediato' ? 'Ordine Immediato' : 'Prenotazione con Ordine'),
       numPeople: orderData.numPeople,
       total: orderData.total,
-      items: orderData.items
+      items: orderData.items,
+      isSeatsOnly: isSeatsOnly,
+      // Aggiungi info sessione per prenotazioni
+      sessionType: orderData.sessionData?.sessionType || null,
+      sessionDate: orderData.sessionData?.sessionDate || null,
+      sessionTime: orderData.sessionData?.sessionTime || null
     }
 
-    console.log('📧 Invio email a:', orderData.email)
+    console.log('📧 Invio email a:', orderData.email, isSeatsOnly ? '(Solo Posti)' : '(Con Ordine)')
 
     // Invia richiesta POST al PHP endpoint
     const response = await fetch(apiUrl, {

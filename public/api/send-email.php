@@ -37,26 +37,52 @@ $total = $data['total'] ?? 0;
 $items = $data['items'] ?? [];
 $orderDate = date('d/m/Y H:i');
 
+// Nuovo: gestisci prenotazione solo posti
+$isSeatsOnly = isset($data['isSeatsOnly']) && $data['isSeatsOnly'] === true;
+$sessionType = $data['sessionType'] ?? null;
+$sessionDate = $data['sessionDate'] ?? null;
+$sessionTime = $data['sessionTime'] ?? null;
+
 // Format items list
 $itemsList = '';
-foreach ($items as $item) {
-    $quantity = $item['quantity'] ?? 1;
-    $name = $item['name'] ?? 'Prodotto';
-    $price = $item['price'] ?? 0;
-    $itemTotal = $quantity * $price;
-    $itemsList .= "• {$quantity}x {$name} - €" . number_format($itemTotal, 2) . "\n";
+if (count($items) > 0) {
+    foreach ($items as $item) {
+        $quantity = $item['quantity'] ?? 1;
+        $name = $item['name'] ?? 'Prodotto';
+        $price = $item['price'] ?? 0;
+        $itemTotal = $quantity * $price;
+        $itemsList .= "• {$quantity}x {$name} - €" . number_format($itemTotal, 2) . "\n";
+    }
+} else if ($isSeatsOnly) {
+    $itemsList = "Nessun ordine ancora effettuato.\nOrdinerai direttamente in presenza al locale.";
 }
 
 // Instructions based on order type
 $instructions = '';
-if ($orderType === 'immediato') {
+if ($isSeatsOnly) {
+    // Prenotazione solo posti
+    $sessionLabel = $sessionType === 'lunch' ? 'Pranzo' : 'Cena';
+    $instructions = "🪑 PRENOTAZIONE POSTI\n\n";
+    $instructions .= "I tuoi posti sono stati riservati!\n\n";
+    $instructions .= "📅 Sessione: {$sessionLabel}\n";
+    if ($sessionDate) {
+        $instructions .= "📆 Data: {$sessionDate}\n";
+    }
+    if ($sessionTime) {
+        $instructions .= "🕐 Orario: {$sessionTime}\n";
+    }
+    $instructions .= "\n💡 L'ordinazione verrà effettuata direttamente in presenza.\n";
+    $instructions .= "Presentati all'ingresso con il nome del personaggio: {$characterName}";
+} else if ($orderType === 'immediato') {
     $instructions = "⚡ ORDINE IMMEDIATO\nIl tuo ordine verrà preparato subito!\nPresentati alla cassa con il nome del personaggio: {$characterName}";
 } else {
     $instructions = "📅 PRENOTAZIONE\nIl tuo tavolo è prenotato!\nPresentati all'ingresso con il nome del personaggio: {$characterName}";
 }
 
 // Email subject
-$subject = "🎄 Ordine Noel Fest - {$characterName}";
+$subject = $isSeatsOnly 
+    ? "🎄 Prenotazione Posti Noel Fest - {$characterName}"
+    : "🎄 Ordine Noel Fest - {$characterName}";
 
 // Email body (HTML) - Christmas themed like the website
 $htmlBody = "
@@ -304,12 +330,15 @@ $htmlBody = "
     <div class='email-wrapper'>
         <div class='header'>
             <h1>🎄 Noel Fest 🎅</h1>
-            <p>Conferma Ordine</p>
+            <p>" . ($isSeatsOnly ? "Conferma Prenotazione Posti" : "Conferma Ordine") . "</p>
         </div>
         
         <div class='content'>
             <p class='greeting'>Ciao!</p>
-            <p class='intro'>Grazie per il tuo ordine al Noel Fest! Il tuo ordine è stato confermato con successo. 🎄✨</p>
+            <p class='intro'>" . ($isSeatsOnly 
+                ? "I tuoi posti al Noel Fest sono stati prenotati con successo! 🪑✨" 
+                : "Grazie per il tuo ordine al Noel Fest! Il tuo ordine è stato confermato con successo. 🎄✨"
+            ) . "</p>
             
             <div class='character-box'>
                 <span class='character-icon'>🎭</span>
@@ -333,13 +362,13 @@ $htmlBody = "
             </div>
             
             <div class='section'>
-                <div class='section-title'>🍽️ Il Tuo Ordine</div>
+                <div class='section-title'>" . ($isSeatsOnly ? "🪑 Prenotazione Posti" : "🍽️ Il Tuo Ordine") . "</div>
                 <div class='order-items'>
                     " . nl2br(htmlspecialchars($itemsList)) . "
                 </div>
-                <div class='total-box'>
+                " . ($isSeatsOnly ? "" : "<div class='total-box'>
                     Totale: €" . number_format($total, 2) . "
-                </div>
+                </div>") . "
             </div>
             
             <div class='instructions-box'>
