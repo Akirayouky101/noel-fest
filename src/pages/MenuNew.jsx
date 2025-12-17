@@ -212,13 +212,10 @@ function MenuNew() {
     localStorage.setItem('email', submittedEmail)
     localStorage.setItem('orderType', orderType)
     
-    if (orderType === 'at_register' && sessionData) {
-      try {
-        await createReservation(character, submittedEmail, people, sessionData)
-      } catch (error) {
-        console.error('Errore creazione prenotazione:', error)
-      }
-    }
+    // NON creare più la prenotazione qui!
+    // La prenotazione verrà creata SOLO quando:
+    // 1. L'utente completa un ordine (in submitOrder), OPPURE
+    // 2. L'utente clicca "Occupa Posti" (in confirmReserveSeatsOnly)
     
     setShowEmailModal(false)
   }
@@ -316,15 +313,21 @@ function MenuNew() {
         notes: notes || ''
       }
       
-      // 1. Crea ordine nel database
+      // 1. Se è una prenotazione, crea prima la prenotazione dei posti
+      if (orderType === 'at_register' && sessionData) {
+        console.log('🪑 Creando prenotazione posti per:', character)
+        await createReservation(character, email, numPeople, sessionData)
+      }
+      
+      // 2. Crea ordine nel database
       await createOrder(orderData)
       
-      // 2. Calcola totale per email
+      // 3. Calcola totale per email
       const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       const coperto = numPeople * 1.5
       const total = itemsTotal + coperto
       
-      // 3. Invia email di conferma (non bloccare se fallisce)
+      // 4. Invia email di conferma (non bloccare se fallisce)
       try {
         const emailResult = await sendOrderConfirmationEmail({
           email: email,
