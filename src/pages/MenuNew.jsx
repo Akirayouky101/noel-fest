@@ -46,6 +46,7 @@ function MenuNew() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showProductModal, setShowProductModal] = useState(false)
+  const [showReserveOnlyModal, setShowReserveOnlyModal] = useState(false)
 
   const scrollContainerRef = useRef(null)
   const categoryRefs = useRef({})
@@ -359,6 +360,40 @@ function MenuNew() {
     }
   }
 
+  // Funzione per occupare posti senza ordine (ordineranno in presenza)
+  const handleReserveSeatsOnly = () => {
+    // Solo per prenotazioni (at_register)
+    if (orderType !== 'at_register') {
+      alert('⚠️ Questa funzione è disponibile solo per le prenotazioni!')
+      return
+    }
+    
+    setShowReserveOnlyModal(true)
+  }
+
+  const confirmReserveSeatsOnly = async () => {
+    try {
+      console.log('🪑 Occupando posti senza ordine per:', character)
+      
+      // Crea solo la prenotazione, senza ordine
+      await createReservation(character, email, numPeople, sessionData)
+      
+      console.log('✅ Posti occupati con successo')
+      
+      setShowReserveOnlyModal(false)
+      setShowSuccess(true)
+      
+      // Dopo 3 secondi: torna alla pagina iniziale
+      setTimeout(() => {
+        setShowSuccess(false)
+        handleBackToStart()
+      }, 3000)
+    } catch (error) {
+      console.error('❌ Errore occupazione posti:', error)
+      alert('Errore durante l\'occupazione dei posti: ' + error.message)
+    }
+  }
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
@@ -448,6 +483,14 @@ function MenuNew() {
             </button>
           ) : (
             <>
+              {/* Pulsante Occupa Posti (solo per prenotazioni) */}
+              {orderType === 'at_register' && (
+                <button className="reserve-seats-btn" onClick={handleReserveSeatsOnly}>
+                  <span className="reserve-icon">🪑</span>
+                  <span className="reserve-text">Occupa Posti</span>
+                </button>
+              )}
+              
               <button className="cart-button" onClick={() => setShowCart(true)}>
                 <span className="cart-icon">🛒</span>
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
@@ -575,6 +618,57 @@ function MenuNew() {
           }}
           onGoToMenu={() => window.location.href = '/'}
         />
+      )}
+
+      {/* Modale Conferma Occupa Posti */}
+      {showReserveOnlyModal && (
+        <div className="modal-overlay" onClick={() => setShowReserveOnlyModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🪑 Occupa Posti Senza Ordinazione</h2>
+            </div>
+            
+            <div className="modal-body">
+              <div className="reserve-info">
+                <p className="reserve-character">🎅 <strong>{character}</strong></p>
+                <p className="reserve-people">👥 <strong>{numPeople}</strong> {numPeople === 1 ? 'persona' : 'persone'}</p>
+                {sessionData && (
+                  <>
+                    <p className="reserve-session">
+                      📅 {sessionData.sessionType === 'lunch' ? '🌞 Pranzo' : '🌙 Cena'}
+                    </p>
+                    {sessionData.sessionDate && (
+                      <p className="reserve-date">📆 {sessionData.sessionDate}</p>
+                    )}
+                    {sessionData.sessionTime && (
+                      <p className="reserve-time">🕐 {sessionData.sessionTime}</p>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="reserve-warning">
+                <p>⚠️ I posti verranno occupati ma <strong>non ci sarà un ordine</strong>.</p>
+                <p>💡 L'ordinazione verrà fatta direttamente in presenza.</p>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn-modal-cancel" 
+                onClick={() => setShowReserveOnlyModal(false)}
+              >
+                Annulla
+              </button>
+              <button 
+                className="btn-modal-confirm" 
+                onClick={confirmReserveSeatsOnly}
+              >
+                🪑 Conferma Occupazione
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

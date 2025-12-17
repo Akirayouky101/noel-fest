@@ -192,6 +192,56 @@ body {
   50% { transform: scale(1.15); }
 }
 
+/* Reserve Seats Button */
+.reserve-seats-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 24px;
+  border: 2px solid #FFD700;
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.9), rgba(205, 92, 92, 0.9));
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.reserve-seats-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, rgba(139, 0, 0, 1), rgba(205, 92, 92, 1));
+}
+
+.reserve-icon {
+  font-size: 1.2rem;
+}
+
+.reserve-text {
+  display: inline;
+}
+
+/* Mobile: nascondi testo, mostra solo icona */
+@media (max-width: 768px) {
+  .reserve-seats-btn {
+    padding: 10px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+  }
+  
+  .reserve-text {
+    display: none;
+  }
+  
+  .reserve-icon {
+    font-size: 1.5rem;
+  }
+}
+
 /* ========================================
    SEATS BAR
    ======================================== */
@@ -907,6 +957,97 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* ========================================
+   RESERVE SEATS ONLY MODAL
+   ======================================== */
+
+.reserve-info {
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(205, 92, 92, 0.1));
+  border: 2px solid #FFD700;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.reserve-info p {
+  margin: 8px 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reserve-character {
+  font-size: 1.2rem;
+  color: #FFD700;
+}
+
+.reserve-people {
+  font-size: 1.1rem;
+  color: white;
+}
+
+.reserve-session,
+.reserve-date,
+.reserve-time {
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+.reserve-warning {
+  background: rgba(255, 165, 0, 0.2);
+  border: 2px solid #FFA500;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.reserve-warning p {
+  margin: 8px 0;
+  color: white;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.reserve-warning strong {
+  color: #FFD700;
+  font-weight: 700;
+}
+
+.btn-modal-cancel,
+.btn-modal-confirm {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.btn-modal-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-modal-cancel:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-modal-confirm {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #8B0000;
+  font-weight: 700;
+}
+
+.btn-modal-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
 }
 
 .logout-btn {
