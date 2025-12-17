@@ -27,6 +27,9 @@ export default function SeatsManager({ isOpen, onClose, onViewOrders }) {
   // Form states
   const [newReservation, setNewReservation] = useState({ character: '', people: 1 })
   const [newWalkin, setNewWalkin] = useState({ character: '', seats: 1 })
+  
+  // Confirm delete modal
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, character: '', type: '' })
 
   useEffect(() => {
     if (isOpen) {
@@ -85,14 +88,25 @@ export default function SeatsManager({ isOpen, onClose, onViewOrders }) {
 
   // Delete reservation
   const handleDeleteReservation = async (character) => {
-    if (!confirm(`Liberare i posti di ${character}?`)) return
+    setConfirmDelete({ show: true, character, type: 'reservation' })
+  }
 
+  const confirmDeleteAction = async () => {
+    const { character, type } = confirmDelete
+    
     try {
-      await deleteReservation(character)
-      toast.success('Posti liberati')
+      if (type === 'reservation') {
+        await deleteReservation(character)
+        toast.success('🎉 Posti liberati con successo!')
+      } else if (type === 'walkin') {
+        await deleteWalkinSeats(character)
+        toast.success('🎉 Posti walk-in liberati!')
+      }
+      
+      setConfirmDelete({ show: false, character: '', type: '' })
       loadData()
     } catch (error) {
-      console.error('Error deleting reservation:', error)
+      console.error('Error deleting:', error)
       toast.error('Errore nella cancellazione')
     }
   }
@@ -144,16 +158,7 @@ export default function SeatsManager({ isOpen, onClose, onViewOrders }) {
 
   // Delete walk-in
   const handleDeleteWalkin = async (character) => {
-    if (!confirm(`Liberare i posti walk-in di ${character}?`)) return
-
-    try {
-      await deleteWalkinSeats(character)
-      toast.success('Posti walk-in liberati')
-      loadData()
-    } catch (error) {
-      console.error('Error deleting walkin:', error)
-      toast.error('Errore nella cancellazione')
-    }
+    setConfirmDelete({ show: true, character, type: 'walkin' })
   }
 
   // Update walk-in seats
@@ -367,6 +372,39 @@ export default function SeatsManager({ isOpen, onClose, onViewOrders }) {
               </div>
             </div>
           </>
+        )}
+        
+        {/* Modale di conferma cancellazione */}
+        {confirmDelete.show && (
+          <div className="delete-confirm-overlay" onClick={() => setConfirmDelete({ show: false, character: '', type: '' })}>
+            <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="delete-confirm-icon">🎄</div>
+              <h2 className="delete-confirm-title">Liberare i Posti?</h2>
+              <p className="delete-confirm-text">
+                Stai per liberare i posti {confirmDelete.type === 'walkin' ? 'walk-in' : 'prenotati'} di:
+              </p>
+              <div className="delete-confirm-character">
+                🎅 {confirmDelete.character}
+              </div>
+              <p className="delete-confirm-warning">
+                I posti torneranno disponibili per nuove prenotazioni
+              </p>
+              <div className="delete-confirm-actions">
+                <button 
+                  className="delete-confirm-btn cancel"
+                  onClick={() => setConfirmDelete({ show: false, character: '', type: '' })}
+                >
+                  ❌ Annulla
+                </button>
+                <button 
+                  className="delete-confirm-btn confirm"
+                  onClick={confirmDeleteAction}
+                >
+                  ✅ Conferma e Libera
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
