@@ -7,8 +7,8 @@
  */
 export async function sendOrderConfirmationEmail(orderData) {
   try {
-    // URL dell'endpoint PHP (usa quello in produzione su Vercel)
-    const apiUrl = import.meta.env.VITE_EMAIL_API_URL || '/api/send-email.php'
+    // URL dell'endpoint PHP su Siteground
+    const apiUrl = 'https://appdataconnect.it/api/send-email.php'
     
     // Prepara i dati per l'email
     const emailData = {
