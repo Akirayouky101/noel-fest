@@ -5,6 +5,7 @@ import MenuItemNew from '../components/MenuItemNew'
 import { menuData } from '../data/menuData'
 import { getRandomCharacter } from '../data/characters'
 import { getAvailableSeats, createOrder, createReservation } from '../lib/supabaseAPI'
+import { sendOrderConfirmationEmail } from '../lib/emailService'
 import './MenuNew.css'
 
 const categoriesCucina = [
@@ -245,22 +246,20 @@ function MenuNew() {
       
       // 3. Invia email di conferma (non bloccare se fallisce)
       try {
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-order-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({
-            email: email,
-            characterName: character,
-            items: cart,
-            total: total,
-            numPeople: numPeople,
-            orderType: orderType
-          })
+        const emailResult = await sendOrderConfirmationEmail({
+          email: email,
+          characterName: character,
+          items: cart,
+          total: total,
+          numPeople: numPeople,
+          orderType: orderType
         })
-        console.log('✅ Email di conferma inviata')
+        
+        if (emailResult.success) {
+          console.log('✅ Email di conferma inviata con successo')
+        } else {
+          console.warn('⚠️ Email non inviata:', emailResult.error)
+        }
       } catch (emailError) {
         console.warn('⚠️ Email non inviata (ordine comunque creato):', emailError)
       }
