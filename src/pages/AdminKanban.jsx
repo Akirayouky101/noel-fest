@@ -75,6 +75,11 @@ export default function AdminKanban({ user, onLogout }) {
     calculateStats()
   }, [orders])
 
+  // Debug settingsModal changes
+  useEffect(() => {
+    console.log('🔍 useEffect: settingsModal changed to:', settingsModal)
+  }, [settingsModal])
+
   // Apply filters
   useEffect(() => {
     applyFilters()
