@@ -30,6 +30,7 @@ export default function AdminKanban({ user, onLogout }) {
   const [selectedOrders, setSelectedOrders] = useState([])
   const [settingsModal, setSettingsModal] = useState(false)
   const audioRef = useRef(null)
+  const settingsModalRef = useRef(false)
   
   // Filtri
   const [searchTerm, setSearchTerm] = useState('')
@@ -685,8 +686,18 @@ export default function AdminKanban({ user, onLogout }) {
                 className="settings-toggle"
                 onClick={() => {
                   console.log('🔧 Settings button clicked!')
-                  setSettingsModal(true)
-                  console.log('🔧 settingsModal set to true')
+                  console.log('🔧 BEFORE - settingsModal:', settingsModal)
+                  console.log('🔧 BEFORE - settingsModalRef:', settingsModalRef.current)
+                  setSettingsModal(prev => {
+                    console.log('🔧 setState callback - prev:', prev)
+                    return true
+                  })
+                  settingsModalRef.current = true
+                  console.log('🔧 AFTER - settingsModalRef:', settingsModalRef.current)
+                  // Force re-render
+                  setTimeout(() => {
+                    console.log('🔧 setTimeout - settingsModal:', settingsModal)
+                  }, 100)
                 }}
                 title="Impostazioni"
               >
