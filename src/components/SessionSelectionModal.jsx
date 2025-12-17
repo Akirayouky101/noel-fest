@@ -121,13 +121,14 @@ export default function SessionSelectionModal({ show, onClose, onConfirm }) {
             fontSize: '1rem',
             fontWeight: 'bold'
           }}>
-            📆 Data
+            📆 Data (solo 20-21 dicembre)
           </label>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
+            min="2025-12-20"
+            max="2025-12-21"
             style={{
               width: '100%',
               padding: '12px',
@@ -139,6 +140,14 @@ export default function SessionSelectionModal({ show, onClose, onConfirm }) {
               cursor: 'pointer'
             }}
           />
+          <p style={{
+            color: 'rgba(255, 215, 0, 0.7)',
+            fontSize: '0.85rem',
+            marginTop: '8px',
+            textAlign: 'center'
+          }}>
+            🎄 L'evento si svolge il 20 e 21 dicembre 2025
+          </p>
         </div>
 
         {/* Selezione Sessione */}

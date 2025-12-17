@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Cart from '../components/Cart'
 import SessionSelectionModal from '../components/SessionSelectionModal'
+import KitchenHoursModal from '../components/KitchenHoursModal'
 import MenuItemNew from '../components/MenuItemNew'
 import { menuData } from '../data/menuData'
 import { getRandomCharacter } from '../data/characters'
@@ -38,6 +39,7 @@ function MenuNew() {
   const [showSeatsFullModal, setShowSeatsFullModal] = useState(false)
   const [showMenuTypeModal, setShowMenuTypeModal] = useState(false)
   const [showCopertoWarningModal, setShowCopertoWarningModal] = useState(false)
+  const [showKitchenHoursModal, setShowKitchenHoursModal] = useState(false)
   const [activeCategory, setActiveCategory] = useState('antipasti')
   const [cart, setCart] = useState([])
   const [showCart, setShowCart] = useState(false)
@@ -110,6 +112,40 @@ function MenuNew() {
   
   const handleMenuTypeSelection = (type) => {
     setShowMenuTypeModal(false)
+    
+    // Controllo orari per ordini immediati
+    if (orderType === 'immediate') {
+      const now = new Date()
+      const currentHour = now.getHours()
+      const currentMinutes = now.getMinutes()
+      const currentTime = currentHour * 60 + currentMinutes
+
+      // Orari cucina: 19:00 - 23:00
+      const kitchenStart = 19 * 60
+      const kitchenEnd = 23 * 60
+
+      // Orari street food: 10:00 - 00:00
+      const streetStart = 10 * 60
+      const streetEnd = 24 * 60
+
+      // Se prova ad accedere alla cucina fuori orario
+      if (type === 'cucina' && (currentTime < kitchenStart || currentTime >= kitchenEnd)) {
+        setShowKitchenHoursModal(true)
+        // Forza Street Food come unica opzione
+        setMenuType('street')
+        setActiveCategory('panini')
+        if (orderType === 'immediate') {
+          setShowEmailModal(true)
+        }
+        return
+      }
+
+      // Se prova ad accedere allo street food fuori orario
+      if (type === 'street' && (currentTime < streetStart || currentTime >= streetEnd)) {
+        setShowKitchenHoursModal(true)
+        return
+      }
+    }
     
     // Se è Menù Cucina, mostra avviso coperto PRIMA di continuare
     if (type === 'cucina') {
@@ -187,6 +223,34 @@ function MenuNew() {
   }
 
   const handleCategoryClick = (categoryId) => {
+    // Controllo orari per ordini immediati
+    if (orderType === 'immediate') {
+      const now = new Date()
+      const currentHour = now.getHours()
+      const currentMinutes = now.getMinutes()
+      const currentTime = currentHour * 60 + currentMinutes
+
+      // Orari cucina: 19:00 - 23:00 (1140-1380 minuti)
+      const kitchenStart = 19 * 60 // 1140
+      const kitchenEnd = 23 * 60 // 1380
+
+      // Orari street food: 10:00 - 00:00 (600-1440 minuti, poi 0-0)
+      const streetStart = 10 * 60 // 600
+      const streetEnd = 24 * 60 // 1440 (mezzanotte)
+
+      // Se sto cercando di accedere alla cucina
+      if (menuType === 'cucina' && (currentTime < kitchenStart || currentTime >= kitchenEnd)) {
+        setShowKitchenHoursModal(true)
+        return
+      }
+
+      // Se sto cercando di accedere allo street food
+      if (menuType === 'street' && (currentTime < streetStart || currentTime >= streetEnd)) {
+        setShowKitchenHoursModal(true)
+        return
+      }
+    }
+
     setActiveCategory(categoryId)
     categoryRefs.current[categoryId]?.scrollIntoView({ 
       behavior: 'smooth',
@@ -324,6 +388,16 @@ function MenuNew() {
   if (showCopertoWarningModal) {
     return (
       <CopertoWarningModal onClose={handleCopertoWarningClose} />
+    )
+  }
+  
+  // Modale orari cucina
+  if (showKitchenHoursModal) {
+    return (
+      <KitchenHoursModal 
+        show={showKitchenHoursModal}
+        onClose={() => setShowKitchenHoursModal(false)}
+      />
     )
   }
   
