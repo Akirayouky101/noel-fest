@@ -372,7 +372,16 @@ function MenuNew() {
       // In modalità admin, la prenotazione esiste già e verrà eliminata dopo
       if (orderType === 'at_register' && sessionData && !adminData) {
         console.log('🪑 Creando prenotazione posti per:', character)
-        await createReservation(character, email, numPeople, sessionData)
+        try {
+          await createReservation(character, email, numPeople, sessionData)
+        } catch (reservationError) {
+          // Se la prenotazione esiste già, non è un problema critico
+          if (reservationError.code === '23505') {
+            console.log('⚠️ Prenotazione già esistente, procedo comunque con l\'ordine')
+          } else {
+            throw reservationError // Altri errori sono critici
+          }
+        }
       }
       
       // 2. Crea ordine nel database
@@ -419,13 +428,13 @@ function MenuNew() {
       setTimeout(() => {
         setShowSuccess(false)
         if (adminData) {
-          navigate('/admin') // Torna al pannello admin
+          window.location.href = '/admin' // Torna al pannello admin
         } else {
           handleBackToStart() // Esegui logout e reset
         }
       }, 3000)
     } catch (error) {
-      console.error('Errore completo:', error)
+      console.error('❌ Errore durante invio ordine:', error)
       alert('Errore durante l\'invio dell\'ordine: ' + error.message)
       throw error
     }
