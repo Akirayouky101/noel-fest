@@ -29,7 +29,21 @@ const categoriesStreetFood = [
 function MenuNew() {
   const navigate = useNavigate()
   const location = useLocation()
-  const adminData = location.state?.adminData // Dati dalla modale admin
+  
+  // Estrai adminData da sessionStorage (priorità) o da location.state
+  const getAdminData = () => {
+    const stored = sessionStorage.getItem('adminOrderData')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch (e) {
+        console.error('Errore parsing adminData:', e)
+      }
+    }
+    return location?.state?.adminData || null
+  }
+  
+  const adminData = getAdminData()
   
   const [character, setCharacter] = useState(null)
   const [email, setEmail] = useState('')
@@ -66,6 +80,10 @@ function MenuNew() {
     // Se arriviamo dall'admin, usa quei dati
     if (adminData) {
       console.log('🔧 MODALITÀ ADMIN: Pre-popolo dati da prenotazione', adminData)
+      
+      // Pulisci sessionStorage dopo aver letto i dati
+      sessionStorage.removeItem('adminOrderData')
+      
       setCharacter(adminData.characterName)
       setEmail(adminData.email)
       setNumPeople(adminData.numPeople)

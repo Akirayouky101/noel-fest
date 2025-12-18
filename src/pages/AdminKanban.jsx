@@ -623,20 +623,21 @@ export default function AdminKanban({ user, onLogout }) {
   const handleCreateOrderFromReservation = (reservation) => {
     console.log('🛒 Navigando al menu per creare ordine da prenotazione:', reservation)
     
-    // Naviga alla pagina MenuNew con i dati della prenotazione
-    navigate('/', {
-      state: {
-        adminData: {
-          reservationId: reservation.id,
-          characterName: reservation.character_name,
-          email: reservation.email,
-          numPeople: reservation.num_people,
-          sessionType: reservation.session_type,
-          sessionDate: reservation.session_date,
-          sessionTime: reservation.session_time
-        }
-      }
-    })
+    // Salva i dati della prenotazione in sessionStorage per passarli a MenuNew
+    const adminData = {
+      reservationId: reservation.id,
+      characterName: reservation.character_name,
+      email: reservation.email,
+      numPeople: reservation.num_people,
+      sessionType: reservation.session_type,
+      sessionDate: reservation.session_date,
+      sessionTime: reservation.session_time
+    }
+    
+    sessionStorage.setItem('adminOrderData', JSON.stringify(adminData))
+    
+    // Naviga alla home
+    window.location.href = '/'
   }
 
   // Status helpers
