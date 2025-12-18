@@ -28,6 +28,8 @@ export default function AdminKanban({ user, onLogout }) {
   const [showSeatsManager, setShowSeatsManager] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
+  const [showReservationModal, setShowReservationModal] = useState(false)
+  const [selectedReservation, setSelectedReservation] = useState(null)
   const audioRef = useRef(null)
   
   // Filtri
@@ -922,26 +924,27 @@ export default function AdminKanban({ user, onLogout }) {
           <ReservationsView 
             reservations={reservations} 
             onRefresh={loadReservations}
-            onReservationClick={(characterName) => {
-              console.log('🔍 Click su prenotazione:', characterName)
-              console.log('📦 allOrders disponibili:', allOrders.length)
+            onReservationClick={(reservation) => {
+              console.log('🔍 Click su prenotazione:', reservation)
               
-              // Cerco tra TUTTI gli ordini (anche quelli programmati non ancora visibili)
-              // NOTE: allOrders ha characterName (camelCase), reservation ha character_name (snake_case)
-              const characterOrders = allOrders.filter(
-                order => order.characterName === characterName || order.character_name === characterName
-              )
-              
-              console.log('📋 Ordini trovati per', characterName, ':', characterOrders.length)
-              
-              if (characterOrders.length > 0) {
-                console.log('✅ Apro modale con', characterOrders.length, 'ordini')
-                setSelectedCharacter(characterName)
-                setSelectedOrders(characterOrders)
+              // Se ha ordini, mostra gli ordini (comportamento esistente)
+              if (reservation.has_orders) {
+                const characterOrders = allOrders.filter(
+                  order => order.characterName === reservation.character_name || order.character_name === reservation.character_name
+                )
+                
+                console.log('📋 Ordini trovati per', reservation.character_name, ':', characterOrders.length)
+                
+                if (characterOrders.length > 0) {
+                  console.log('✅ Apro modale ordini con', characterOrders.length, 'ordini')
+                  setSelectedCharacter(reservation.character_name)
+                  setSelectedOrders(characterOrders)
+                }
               } else {
-                console.log('⚠️ Nessun ordine trovato per', characterName)
-                console.log('   Verifica che il nome sia corretto e che ci siano ordini non cancellati')
-                toast.info(`Nessun ordine trovato per ${characterName}`)
+                // Se NON ha ordini, mostra modale dettagli prenotazione posti
+                console.log('🪑 Apro modale prenotazione solo posti')
+                setSelectedReservation(reservation)
+                setShowReservationModal(true)
               }
             }}
           />
@@ -989,6 +992,117 @@ export default function AdminKanban({ user, onLogout }) {
           orders={selectedOrders}
           onClose={closeModal}
         />
+      )}
+
+      {/* Reservation Details Modal (Solo Posti) */}
+      {showReservationModal && selectedReservation && (
+        <div className="modal-overlay" onClick={() => setShowReservationModal(false)}>
+          <div className="reservation-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🪑 Dettagli Prenotazione Solo Posti</h2>
+              <button 
+                className="close-btn"
+                onClick={() => setShowReservationModal(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="reservation-modal-content">
+              {/* Character Name */}
+              <div className="detail-box character-box">
+                <span className="detail-icon">🎭</span>
+                <div>
+                  <div className="detail-label">Personaggio</div>
+                  <div className="detail-value">{selectedReservation.character_name}</div>
+                </div>
+              </div>
+
+              {/* Number of People */}
+              <div className="detail-box">
+                <span className="detail-icon">👥</span>
+                <div>
+                  <div className="detail-label">Numero Persone</div>
+                  <div className="detail-value">
+                    {selectedReservation.num_people} {selectedReservation.num_people === 1 ? 'persona' : 'persone'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Session Info */}
+              {selectedReservation.session_type && (
+                <>
+                  <div className="detail-box">
+                    <span className="detail-icon">🍽️</span>
+                    <div>
+                      <div className="detail-label">Sessione</div>
+                      <div className="detail-value">
+                        {selectedReservation.session_type === 'lunch' ? '🌞 Pranzo' : '🌙 Cena'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedReservation.session_date && (
+                    <div className="detail-box">
+                      <span className="detail-icon">📅</span>
+                      <div>
+                        <div className="detail-label">Data Prenotata</div>
+                        <div className="detail-value">{selectedReservation.session_date}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedReservation.session_time && (
+                    <div className="detail-box">
+                      <span className="detail-icon">🕐</span>
+                      <div>
+                        <div className="detail-label">Orario</div>
+                        <div className="detail-value">{selectedReservation.session_time}</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Email */}
+              {selectedReservation.email && (
+                <div className="detail-box">
+                  <span className="detail-icon">📧</span>
+                  <div>
+                    <div className="detail-label">Email</div>
+                    <div className="detail-value email-value">{selectedReservation.email}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Created At */}
+              <div className="detail-box">
+                <span className="detail-icon">⏰</span>
+                <div>
+                  <div className="detail-label">Prenotazione Creata</div>
+                  <div className="detail-value">
+                    {new Date(selectedReservation.created_at).toLocaleString('it-IT', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Box */}
+              <div className="warning-box">
+                <AlertTriangle size={20} />
+                <div>
+                  <strong>Importante:</strong> Questa è una prenotazione di soli posti.
+                  Il cliente deve ancora effettuare l'ordine in presenza.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -1256,7 +1370,7 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
             <div 
               key={reservation.id} 
               className={`reservation-card clickable ${reservation.is_scheduled ? 'scheduled' : 'active'} ${!reservation.has_orders ? 'seats-only' : ''}`}
-              onClick={() => onReservationClick(reservation.character_name)}
+              onClick={() => onReservationClick(reservation)}
             >
               <div className="reservation-header-with-badge">
                 <div className="reservation-character">
