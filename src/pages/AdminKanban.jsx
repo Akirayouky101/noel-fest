@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 import { 
   Clock, Users, Package, TrendingUp, RefreshCw, 
@@ -15,10 +16,10 @@ import {
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import SeatsManager from '../components/SeatsManager'
 import OrderDetailsModal from '../components/OrderDetailsModal'
-import AdminOrderModal from '../components/AdminOrderModal'
 import './Admin-Kanban-Professional.css'
 
 export default function AdminKanban({ user, onLogout }) {
+  const navigate = useNavigate()
   const [orders, setOrders] = useState([]) // Ordini VISIBILI (filtrati per orario)
   const [allOrders, setAllOrders] = useState([]) // TUTTI gli ordini (anche futuri)
   const [filteredOrders, setFilteredOrders] = useState([])
@@ -31,7 +32,6 @@ export default function AdminKanban({ user, onLogout }) {
   const [selectedOrders, setSelectedOrders] = useState([])
   const [showReservationModal, setShowReservationModal] = useState(false)
   const [selectedReservation, setSelectedReservation] = useState(null)
-  const [showAdminOrderModal, setShowAdminOrderModal] = useState(false)
   const audioRef = useRef(null)
   
   // Filtri
@@ -619,61 +619,24 @@ export default function AdminKanban({ user, onLogout }) {
   }
 
   // Create order from admin panel (seats-only reservation)
-  const handleCreateOrderFromReservation = async (orderData) => {
-    try {
-      console.log('🛒 Creando ordine da prenotazione solo posti:', orderData)
-
-      // 1. Crea l'ordine
-      const { data: newOrder, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          character_name: orderData.characterName,
-          email: orderData.email,
-          num_people: orderData.numPeople,
-          order_type: 'at_register',
-          session_type: orderData.sessionType || 'immediate',
-          session_date: orderData.sessionDate || null,
-          session_time: orderData.sessionTime || null,
-          items: orderData.items,
-          total: orderData.total,
-          status: 'pending',
-          arrival_group_id: crypto.randomUUID()
-        }])
-        .select()
-
-      if (orderError) throw orderError
-
-      console.log('✅ Ordine creato:', newOrder)
-
-      // 2. Elimina la prenotazione da active_reservations
-      const { error: deleteError } = await supabase
-        .from('active_reservations')
-        .delete()
-        .eq('character_name', orderData.characterName)
-
-      if (deleteError) {
-        console.warn('⚠️ Errore eliminazione prenotazione:', deleteError)
-      } else {
-        console.log('✅ Prenotazione eliminata da active_reservations')
+  // Naviga al menu per creare ordine da prenotazione
+  const handleCreateOrderFromReservation = (reservation) => {
+    console.log('🛒 Navigando al menu per creare ordine da prenotazione:', reservation)
+    
+    // Naviga alla pagina MenuNew con i dati della prenotazione
+    navigate('/', {
+      state: {
+        adminData: {
+          reservationId: reservation.id,
+          characterName: reservation.character_name,
+          email: reservation.email,
+          numPeople: reservation.num_people,
+          sessionType: reservation.session_type,
+          sessionDate: reservation.session_date,
+          sessionTime: reservation.session_time
+        }
       }
-
-      // 3. Chiudi modale e ricarica
-      setShowAdminOrderModal(false)
-      setShowReservationModal(false)
-      setSelectedReservation(null)
-
-      // 4. Ricarica tutto
-      await Promise.all([
-        loadOrders(),
-        loadReservations()
-      ])
-
-      toast.success(`Ordine creato per ${orderData.characterName}!`)
-
-    } catch (error) {
-      console.error('❌ Errore creazione ordine:', error)
-      toast.error('Errore durante la creazione dell\'ordine')
-    }
+    })
   }
 
   // Status helpers
@@ -1166,8 +1129,7 @@ export default function AdminKanban({ user, onLogout }) {
                 <button 
                   className="order-now-btn"
                   onClick={() => {
-                    setShowReservationModal(false)
-                    setShowAdminOrderModal(true)
+                    handleCreateOrderFromReservation(selectedReservation)
                   }}
                 >
                   🛒 Crea Ordine Ora
@@ -1176,18 +1138,6 @@ export default function AdminKanban({ user, onLogout }) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Admin Order Modal (for seats-only reservations) */}
-      {showAdminOrderModal && selectedReservation && (
-        <AdminOrderModal
-          reservation={selectedReservation}
-          onClose={() => {
-            setShowAdminOrderModal(false)
-            setShowReservationModal(true) // Torna alla modale dettagli
-          }}
-          onCreateOrder={handleCreateOrderFromReservation}
-        />
       )}
     </div>
   )

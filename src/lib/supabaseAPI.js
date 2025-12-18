@@ -345,6 +345,26 @@ export async function deleteReservation(characterName) {
   }
 }
 
+// Elimina una specifica prenotazione (solo da active_reservations) - usato quando si converte in ordine
+export async function deleteReservationById(reservationId) {
+  try {
+    console.log(`🧹 Deleting reservation by ID: ${reservationId}`)
+    
+    const { error } = await supabase
+      .from('active_reservations')
+      .delete()
+      .eq('id', reservationId)
+    
+    if (error) throw error
+    
+    console.log(`✅ Deleted reservation ID ${reservationId}`)
+    return { success: true }
+  } catch (error) {
+    console.error('Error in deleteReservationById:', error)
+    throw error
+  }
+}
+
 // Libera solo i posti di prenotazione, mantenendo gli ordini (per ordini completati)
 export async function freeReservationSeats(characterName) {
   try {

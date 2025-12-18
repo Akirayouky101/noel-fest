@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Cart from '../components/Cart'
 import SessionSelectionModal from '../components/SessionSelectionModal'
 import KitchenHoursModal from '../components/KitchenHoursModal'
 import MenuItemNew from '../components/MenuItemNew'
 import { menuData } from '../data/menuData'
 import { getRandomCharacter } from '../data/characters'
-import { getAvailableSeats, createOrder, createReservation } from '../lib/supabaseAPI'
+import { getAvailableSeats, createOrder, createReservation, deleteReservationById } from '../lib/supabaseAPI'
 import { sendOrderConfirmationEmail } from '../lib/emailService'
 import './MenuNew.css'
 
@@ -26,6 +27,10 @@ const categoriesStreetFood = [
 ]
 
 function MenuNew() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const adminData = location.state?.adminData // Dati dalla modale admin
+  
   const [character, setCharacter] = useState(null)
   const [email, setEmail] = useState('')
   const [numPeople, setNumPeople] = useState(1)
@@ -56,6 +61,25 @@ function MenuNew() {
 
   // Carica dati da localStorage
   useEffect(() => {
+    // Se arriviamo dall'admin, usa quei dati
+    if (adminData) {
+      console.log('🔧 MODALITÀ ADMIN: Pre-popolo dati da prenotazione', adminData)
+      setCharacter(adminData.characterName)
+      setEmail(adminData.email)
+      setNumPeople(adminData.numPeople)
+      setOrderType('at_register') // Le prenotazioni sono sempre "at_register"
+      setSessionData({
+        sessionType: adminData.sessionType,
+        sessionDate: adminData.sessionDate,
+        sessionTime: adminData.sessionTime
+      })
+      setMenuType('cucina') // Le prenotazioni sono sempre menù cucina
+      setActiveCategory('antipasti')
+      setShowWelcomeModal(false)
+      return // Non caricare da localStorage se veniamo dall'admin
+    }
+    
+    // Flusso normale: carica da localStorage
     const savedCharacter = localStorage.getItem('character')
     const savedEmail = localStorage.getItem('email')
     const savedOrderType = localStorage.getItem('orderType')
@@ -74,7 +98,7 @@ function MenuNew() {
     }, 30000)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [adminData])
 
   const fetchAvailableSeats = async () => {
     try {
@@ -322,6 +346,12 @@ function MenuNew() {
       // 2. Crea ordine nel database
       await createOrder(orderData)
       
+      // 2b. Se veniamo dall'admin (conversione da prenotazione a ordine), elimina la prenotazione
+      if (adminData?.reservationId) {
+        console.log('🔧 ADMIN MODE: Eliminando prenotazione dopo creazione ordine, ID:', adminData.reservationId)
+        await deleteReservationById(adminData.reservationId)
+      }
+      
       // 3. Calcola totale per email
       const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       const coperto = numPeople * 1.5
@@ -351,10 +381,16 @@ function MenuNew() {
       setShowCart(false)
       setShowSuccess(true)
       
-      // Dopo 3 secondi: logout automatico e torna alla pagina iniziale
+      // Dopo 3 secondi: 
+      // - Se veniamo dall'admin, torna al pannello admin
+      // - Altrimenti, logout automatico e torna alla pagina iniziale
       setTimeout(() => {
         setShowSuccess(false)
-        handleBackToStart() // Esegui logout e reset
+        if (adminData) {
+          navigate('/admin') // Torna al pannello admin
+        } else {
+          handleBackToStart() // Esegui logout e reset
+        }
       }, 3000)
     } catch (error) {
       console.error('Errore completo:', error)
@@ -498,11 +534,18 @@ function MenuNew() {
                 {menuType === 'cucina' ? '🍝 Menù Cucina' : '🌭 Street Food'}
               </span>
             )}
+            {adminData && (
+              <span className="admin-badge">🔧 Modalità Admin</span>
+            )}
           </div>
         </div>
         
         <div className="header-right">
-          {orderType === 'view_only' ? (
+          {adminData ? (
+            <button className="view-mode-btn" onClick={() => navigate('/admin')}>
+              <span>⬅️ Torna al Pannello Admin</span>
+            </button>
+          ) : orderType === 'view_only' ? (
             <button className="view-mode-btn" onClick={handleBackToStart}>
               <span>⬅️ Torna Indietro</span>
             </button>
