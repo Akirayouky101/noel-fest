@@ -7,9 +7,10 @@ export default function AdminOrderModal({ reservation, onClose, onCreateOrder })
   const [cart, setCart] = useState([])
   const [activeSection, setActiveSection] = useState('kitchen') // 'kitchen' or 'streetfood'
 
-  // Filtra prodotti per sezione
-  const kitchenItems = menuData.filter(item => item.category === 'kitchen')
-  const streetfoodItems = menuData.filter(item => item.category === 'streetfood')
+  // Converti menuData in array e filtra per categoria
+  const allItems = Object.values(menuData).flat()
+  const kitchenItems = allItems.filter(item => item.category === 'kitchen')
+  const streetfoodItems = allItems.filter(item => item.category === 'streetfood')
 
   const currentItems = activeSection === 'kitchen' ? kitchenItems : streetfoodItems
 

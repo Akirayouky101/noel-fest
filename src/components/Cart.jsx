@@ -59,13 +59,6 @@ function Cart({ cart, character, numPeople = 1, onClose, onUpdateQuantity, onSub
             ))}
           </div>
 
-          {/* Note */}
-          {notes && (
-            <div className="confirm-note-box">
-              <strong>📝 Note:</strong> {notes}
-            </div>
-          )}
-
           {/* Totali */}
           <div className="totals-box">
             <div className="total-row">
@@ -146,17 +139,6 @@ function Cart({ cart, character, numPeople = 1, onClose, onUpdateQuantity, onSub
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Note */}
-            <div className="notes-section">
-              <input
-                type="text"
-                className="notes-input"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="💬 Note o richieste speciali (allergie, ecc.)"
-              />
             </div>
 
             {/* Riepilogo totali */}
