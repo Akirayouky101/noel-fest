@@ -61,6 +61,8 @@ function MenuNew() {
 
   // Carica dati da localStorage
   useEffect(() => {
+    console.log('🔄 MenuNew useEffect - adminData:', adminData)
+    
     // Se arriviamo dall'admin, usa quei dati
     if (adminData) {
       console.log('🔧 MODALITÀ ADMIN: Pre-popolo dati da prenotazione', adminData)
@@ -75,7 +77,18 @@ function MenuNew() {
       })
       setMenuType('cucina') // Le prenotazioni sono sempre menù cucina
       setActiveCategory('antipasti')
+      
+      // Chiudi TUTTE le modali
       setShowWelcomeModal(false)
+      setShowEmailModal(false)
+      setShowSessionModal(false)
+      setShowMenuTypeModal(false)
+      setShowCopertoWarningModal(false)
+      setShowKitchenHoursModal(false)
+      setShowSeatsFullModal(false)
+      setShowReserveOnlyModal(false)
+      
+      console.log('✅ ADMIN MODE: Setup completato, menu pronto')
       return // Non caricare da localStorage se veniamo dall'admin
     }
     
@@ -337,8 +350,9 @@ function MenuNew() {
         notes: notes || ''
       }
       
-      // 1. Se è una prenotazione, crea prima la prenotazione dei posti
-      if (orderType === 'at_register' && sessionData) {
+      // 1. Se è una prenotazione normale (NON da admin), crea la prenotazione dei posti
+      // In modalità admin, la prenotazione esiste già e verrà eliminata dopo
+      if (orderType === 'at_register' && sessionData && !adminData) {
         console.log('🪑 Creando prenotazione posti per:', character)
         await createReservation(character, email, numPeople, sessionData)
       }
@@ -346,18 +360,18 @@ function MenuNew() {
       // 2. Crea ordine nel database
       await createOrder(orderData)
       
-      // 2b. Se veniamo dall'admin (conversione da prenotazione a ordine), elimina la prenotazione
+      // 3. Se veniamo dall'admin (conversione da prenotazione a ordine), elimina la prenotazione
       if (adminData?.reservationId) {
         console.log('🔧 ADMIN MODE: Eliminando prenotazione dopo creazione ordine, ID:', adminData.reservationId)
         await deleteReservationById(adminData.reservationId)
       }
       
-      // 3. Calcola totale per email
+      // 4. Calcola totale per email
       const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       const coperto = numPeople * 1.5
       const total = itemsTotal + coperto
       
-      // 4. Invia email di conferma (non bloccare se fallisce)
+      // 5. Invia email di conferma (non bloccare se fallisce)
       try {
         const emailResult = await sendOrderConfirmationEmail({
           email: email,
@@ -516,6 +530,23 @@ function MenuNew() {
   if (showSeatsFullModal) {
     return (
       <SeatsFullModal onClose={() => setShowSeatsFullModal(false)} />
+    )
+  }
+
+  // Se non c'è un character o menuType, mostra loading (es. in attesa dati admin)
+  if (!character || !menuType) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        color: '#fff',
+        fontSize: '1.5rem'
+      }}>
+        <div>🎄 Caricamento menu...</div>
+      </div>
     )
   }
 
