@@ -1282,7 +1282,20 @@ function ReservationsView({ reservations, onRefresh, onReservationClick }) {
                       <span>{reservation.session_time} ({reservation.session_type === 'lunch' ? 'Pranzo' : 'Cena'})</span>
                     </div>
                   </>
+                ) : reservation.session_date && reservation.session_type ? (
+                  // Prenotazione attiva CON info sessione (Solo Posti)
+                  <>
+                    <div className="reservation-info">
+                      <CalendarDays size={18} />
+                      <span>{reservation.session_date}</span>
+                    </div>
+                    <div className="reservation-info">
+                      <Clock size={18} />
+                      <span>{reservation.session_time || 'Da definire'} ({reservation.session_type === 'lunch' ? 'Pranzo' : 'Cena'})</span>
+                    </div>
+                  </>
                 ) : (
+                  // Prenotazione attiva SENZA info sessione (vecchie o senza dati)
                   <div className="reservation-info">
                     <Clock size={18} />
                     <span>{formatDate(reservation.created_at)}</span>
