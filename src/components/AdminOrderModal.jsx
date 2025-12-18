@@ -7,10 +7,14 @@ export default function AdminOrderModal({ reservation, onClose, onCreateOrder })
   const [cart, setCart] = useState([])
   const [activeSection, setActiveSection] = useState('kitchen') // 'kitchen' or 'streetfood'
 
-  // Converti menuData in array e filtra per categoria
-  const allItems = Object.values(menuData).flat()
-  const kitchenItems = allItems.filter(item => item.category === 'kitchen')
-  const streetfoodItems = allItems.filter(item => item.category === 'streetfood')
+  // Dividi prodotti tra Cucina e Street Food
+  // Cucina: tutto tranne streetfood
+  // Street Food: solo la chiave streetfood
+  const kitchenItems = Object.entries(menuData)
+    .filter(([key]) => key !== 'streetfood')
+    .flatMap(([_, items]) => items)
+  
+  const streetfoodItems = menuData.streetfood || []
 
   const currentItems = activeSection === 'kitchen' ? kitchenItems : streetfoodItems
 
