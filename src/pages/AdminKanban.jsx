@@ -15,6 +15,7 @@ import {
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import SeatsManager from '../components/SeatsManager'
 import OrderDetailsModal from '../components/OrderDetailsModal'
+import AdminOrderModal from '../components/AdminOrderModal'
 import './Admin-Kanban-Professional.css'
 
 export default function AdminKanban({ user, onLogout }) {
@@ -30,6 +31,7 @@ export default function AdminKanban({ user, onLogout }) {
   const [selectedOrders, setSelectedOrders] = useState([])
   const [showReservationModal, setShowReservationModal] = useState(false)
   const [selectedReservation, setSelectedReservation] = useState(null)
+  const [showAdminOrderModal, setShowAdminOrderModal] = useState(false)
   const audioRef = useRef(null)
   
   // Filtri
@@ -616,6 +618,64 @@ export default function AdminKanban({ user, onLogout }) {
     loadOrders()
   }
 
+  // Create order from admin panel (seats-only reservation)
+  const handleCreateOrderFromReservation = async (orderData) => {
+    try {
+      console.log('🛒 Creando ordine da prenotazione solo posti:', orderData)
+
+      // 1. Crea l'ordine
+      const { data: newOrder, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          character_name: orderData.characterName,
+          email: orderData.email,
+          num_people: orderData.numPeople,
+          order_type: 'at_register',
+          session_type: orderData.sessionType || 'immediate',
+          session_date: orderData.sessionDate || null,
+          session_time: orderData.sessionTime || null,
+          items: orderData.items,
+          total: orderData.total,
+          status: 'pending',
+          arrival_group_id: crypto.randomUUID()
+        }])
+        .select()
+
+      if (orderError) throw orderError
+
+      console.log('✅ Ordine creato:', newOrder)
+
+      // 2. Elimina la prenotazione da active_reservations
+      const { error: deleteError } = await supabase
+        .from('active_reservations')
+        .delete()
+        .eq('character_name', orderData.characterName)
+
+      if (deleteError) {
+        console.warn('⚠️ Errore eliminazione prenotazione:', deleteError)
+      } else {
+        console.log('✅ Prenotazione eliminata da active_reservations')
+      }
+
+      // 3. Chiudi modale e ricarica
+      setShowAdminOrderModal(false)
+      setShowReservationModal(false)
+      setSelectedReservation(null)
+
+      // 4. Ricarica tutto
+      await Promise.all([
+        loadOrders(),
+        loadReservations()
+      ])
+
+      toast.success(`Ordine creato per ${orderData.characterName}!`)
+
+    } catch (error) {
+      console.error('❌ Errore creazione ordine:', error)
+      toast.error('Errore durante la creazione dell\'ordine')
+    }
+  }
+
   // Status helpers
   const getStatusLabel = (status) => {
     const labels = {
@@ -1100,9 +1160,34 @@ export default function AdminKanban({ user, onLogout }) {
                   Il cliente deve ancora effettuare l'ordine in presenza.
                 </div>
               </div>
+
+              {/* Action Button */}
+              <div className="reservation-modal-actions">
+                <button 
+                  className="order-now-btn"
+                  onClick={() => {
+                    setShowReservationModal(false)
+                    setShowAdminOrderModal(true)
+                  }}
+                >
+                  🛒 Crea Ordine Ora
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Order Modal (for seats-only reservations) */}
+      {showAdminOrderModal && selectedReservation && (
+        <AdminOrderModal
+          reservation={selectedReservation}
+          onClose={() => {
+            setShowAdminOrderModal(false)
+            setShowReservationModal(true) // Torna alla modale dettagli
+          }}
+          onCreateOrder={handleCreateOrderFromReservation}
+        />
       )}
     </div>
   )
