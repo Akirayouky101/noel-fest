@@ -1,6 +1,7 @@
 -- Schema PostgreSQL per Noel Fest
 -- Ottimizzato per Supabase con RLS (Row Level Security)
 
+
 -- =============================================
 -- TABELLA: orders
 -- =============================================
@@ -84,6 +85,10 @@ CREATE TABLE IF NOT EXISTS active_reservations (
   id BIGSERIAL PRIMARY KEY,
   character_name VARCHAR(100) UNIQUE NOT NULL,
   num_people INTEGER NOT NULL,
+  email VARCHAR(255),
+  session_type VARCHAR(20),
+  session_date VARCHAR(50),
+  session_time VARCHAR(50),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -266,21 +266,32 @@ export async function createReservation(characterName, email, numPeople, session
   try {
     console.log('📝 Creating reservation:', { characterName, email, numPeople, sessionData })
     
-    // La tabella active_reservations ha solo: character_name e num_people
-    // Email e session data sono salvati solo nell'ordine finale
+    // Prepara i dati della prenotazione con email e session data
+    const reservationData = { 
+      character_name: characterName,
+      num_people: numPeople,
+      email: email
+    }
+    
+    // Aggiungi session data se presente
+    if (sessionData) {
+      reservationData.session_type = sessionData.sessionType
+      reservationData.session_date = sessionData.sessionDate
+      reservationData.session_time = sessionData.sessionTime
+    }
+    
+    console.log('💾 Saving reservation data:', reservationData)
+    
     const { error } = await supabase
       .from('active_reservations')
-      .insert([{ 
-        character_name: characterName,
-        num_people: numPeople
-      }])
+      .insert([reservationData])
     
     if (error) {
       console.error('❌ Reservation error:', error)
       throw error
     }
     
-    console.log('✅ Reservation created successfully')
+    console.log('✅ Reservation created successfully with session data')
   } catch (error) {
     console.error('Error in createReservation:', error)
     throw error
