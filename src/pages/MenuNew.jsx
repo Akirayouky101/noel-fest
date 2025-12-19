@@ -811,9 +811,10 @@ function WelcomeModal({ onStart, availableSeats }) {
         </div>
         
         <div className="welcome-content">
-          <p className="seats-info">
+          {/* Contatore posti nascosto per non scoraggiare gli utenti */}
+          {/* <p className="seats-info">
             🪑 <strong>{availableSeats}</strong> posti disponibili
-          </p>
+          </p> */}
           
           <div className="welcome-buttons">
             <button className="welcome-btn primary" onClick={() => onStart('at_register')}>
